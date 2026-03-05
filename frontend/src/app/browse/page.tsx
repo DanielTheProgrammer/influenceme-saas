@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 import InfluencerCard from "@/components/InfluencerCard";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+
 export default function BrowsePage() {
     const [influencers, setInfluencers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        // Fetch real data from our FastAPI backend
-        fetch("http://localhost:8000/marketplace/influencers")
+        fetch(`${API_URL}/marketplace/influencers`)
             .then((res) => {
                 if (!res.ok) throw new Error("Failed to fetch influencers");
                 return res.json();

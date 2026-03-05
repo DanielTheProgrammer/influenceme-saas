@@ -74,6 +74,7 @@ def get_my_fan_requests(
         raise HTTPException(status_code=403, detail="Only fans can view their requests.")
     result = db.execute(
         select(models.EngagementRequest)
+        .options(selectinload(models.EngagementRequest.service))
         .filter(models.EngagementRequest.fan_id == current_user.id)
         .order_by(models.EngagementRequest.created_at.desc())
     )

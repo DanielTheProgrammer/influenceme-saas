@@ -67,6 +67,9 @@ class InfluencerProfile(InfluencerProfileBase):
     id: int
     user_id: int
     services: List[EngagementService] = []
+    verification_code: Optional[str] = None
+    instagram_verification_status: str = "unverified"
+    tiktok_verification_status: str = "unverified"
 
     class Config:
         from_attributes = True
@@ -90,6 +93,7 @@ class EngagementRequest(EngagementRequestBase):
     rejection_reason: Optional[str] = None
     counter_offer_price: Optional[float] = None
     counter_offer_description: Optional[str] = None
+    service: Optional[EngagementService] = None
 
     class Config:
         from_attributes = True

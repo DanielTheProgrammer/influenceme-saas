@@ -59,36 +59,10 @@ export default function InfluencerProfilePage({ params }: { params: { id: string
         setSelectedService(service);
     };
 
-    const handleSubmitRequest = async (previewUrl: string) => {
-        if (!session || !selectedService) return;
-
-        try {
-            const token = (session as any).accessToken;
-            const response = await fetch(`${API_URL}/marketplace/requests`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`,
-                },
-                body: JSON.stringify({
-                    service_id: selectedService.id,
-                    generated_image_preview_url: previewUrl,
-                    payment_intent_id: "pi_placeholder",
-                }),
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                alert(`Error submitting request: ${errorData.detail || "Unknown error"}`);
-                return;
-            }
-
-            const data = await response.json();
-            alert(`Request submitted! ID: ${data.id} — Status: ${data.status}`);
-            setSelectedService(null);
-        } catch {
-            alert("An error occurred while submitting your request.");
-        }
+    const handleSubmitRequest = (_previewUrl: string) => {
+        // GenAIStudio already created the request — just redirect to fan dashboard
+        setSelectedService(null);
+        router.push("/fan/requests");
     };
 
     if (loading) return <div className="max-w-4xl mx-auto py-8 text-center text-gray-500">Loading...</div>;

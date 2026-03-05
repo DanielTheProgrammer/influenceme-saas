@@ -16,6 +16,13 @@ interface EngagementRequest {
     rejection_reason: string | null;
     counter_offer_price: number | null;
     counter_offer_description: string | null;
+    service: {
+        id: number;
+        engagement_type: string;
+        price: number;
+        description: string | null;
+        influencer_id: number;
+    } | null;
 }
 
 const STATUS_STYLES: Record<string, string> = {
@@ -128,7 +135,20 @@ export default function FanRequestsPage() {
                             )}
                             <div className="flex-1">
                                 <div className="flex justify-between items-start mb-2">
-                                    <span className="text-sm text-gray-400">Request #{req.id}</span>
+                                    <div>
+                                        <p className="font-bold text-gray-900 capitalize">
+                                            {req.service?.engagement_type.replace(/_/g, " ") ?? `Service #${req.service_id}`}
+                                        </p>
+                                        {req.service && (
+                                            <p className="text-green-600 font-semibold text-sm">
+                                                ${req.service.price.toFixed(2)}
+                                                {" · "}
+                                                <Link href={`/influencers/${req.service.influencer_id}`} className="text-blue-500 hover:underline text-sm">
+                                                    View influencer
+                                                </Link>
+                                            </p>
+                                        )}
+                                    </div>
                                     <span className={`px-3 py-1 rounded-full text-xs font-bold ${STATUS_STYLES[req.status] || "bg-gray-100 text-gray-800"}`}>
                                         {req.status.replace(/_/g, " ").toUpperCase()}
                                     </span>
