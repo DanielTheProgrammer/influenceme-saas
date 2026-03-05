@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.pool import NullPool
 from sqlalchemy import text
 from dotenv import load_dotenv
 import os
@@ -11,9 +12,17 @@ Base = declarative_base()
 
 ASYNC_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./local_dev.db")
 
-# statement_cache_size=0 required for Supabase transaction pooler (port 6543)
-_connect_args = {"statement_cache_size": 0} if "pooler.supabase.com" in ASYNC_DATABASE_URL else {}
-async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False, connect_args=_connect_args)
+# NullPool for serverless (Vercel), statement_cache_size=0 for Supabase transaction pooler
+_is_supabase_pooler = "pooler.supabase.com" in ASYNC_DATABASE_URL
+_connect_args = {"statement_cache_size": 0} if _is_supabase_pooler else {}
+_pool_class = NullPool if _is_supabase_pooler else None
+
+async_engine = create_async_engine(
+    ASYNC_DATABASE_URL,
+    echo=False,
+    connect_args=_connect_args,
+    **( {"poolclass": NullPool} if _is_supabase_pooler else {} )
+)
 AsyncSessionLocal = sessionmaker(
     bind=async_engine, class_=AsyncSession, expire_on_commit=False
 )
