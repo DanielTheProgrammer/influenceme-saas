@@ -52,7 +52,7 @@ def health_check():
             conn.execute(text("SELECT 1"))
         return {"status": "ok", "db": safe_url}
     except Exception as e:
-        return {"status": "error", "db": safe_url, "detail": str(e), "type": type(e).__name__, "driver": database.DATABASE_URL.split("://")[0]}
+        return {"status": "error", "db": safe_url, "detail": str(e)}
 
 
 @app.post("/token", response_model=schemas.Token)
