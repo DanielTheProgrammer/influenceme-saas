@@ -1,5 +1,5 @@
 import models, schemas, database, auth
-from routers import marketplace, genai, influencer, influencers, dashboard, payments
+from routers import marketplace, genai, influencer, influencers, dashboard, payments, social
 
 from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -129,3 +129,4 @@ app.include_router(influencer.router)
 app.include_router(influencers.router)
 app.include_router(dashboard.router)
 app.include_router(payments.router)
+app.include_router(social.router)

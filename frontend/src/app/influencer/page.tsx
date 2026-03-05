@@ -55,6 +55,8 @@ export default function InfluencerOnboarding() {
     const [followersCount, setFollowersCount] = useState("");
     const [recentPostUrls, setRecentPostUrls] = useState<string[]>(["", "", "", "", "", ""]);
 
+    const [syncing, setSyncing] = useState<"instagram" | "tiktok" | null>(null);
+
     // New service form state
     const [showServiceForm, setShowServiceForm] = useState(false);
     const [serviceType, setServiceType] = useState("story_tag");
@@ -90,6 +92,31 @@ export default function InfluencerOnboarding() {
             })
             .catch(() => setLoading(false));
     }, [token]);
+
+    const syncFromSocial = async (platform: "instagram" | "tiktok") => {
+        const handle = (platform === "instagram" ? instagramHandle : tiktokHandle).trim().replace(/^@/, "");
+        if (!handle) {
+            toast.error(`Enter your ${platform === "instagram" ? "Instagram" : "TikTok"} handle first.`);
+            return;
+        }
+        setSyncing(platform);
+        try {
+            const res = await fetch(`${API_URL}/social/preview?platform=${platform}&handle=${encodeURIComponent(handle)}`);
+            if (!res.ok) throw new Error("Could not fetch profile data.");
+            const data = await res.json();
+            setProfilePicUrl(data.profile_picture_url);
+            if (data.followers_count) {
+                setFollowersCount(String(data.followers_count));
+                toast.success(`Synced! Profile picture updated${data.followers_scraped ? ` · ${data.followers_count.toLocaleString()} followers` : " · enter follower count manually"}.`);
+            } else {
+                toast.success("Profile picture synced! Please enter your follower count manually.");
+            }
+        } catch (err: any) {
+            toast.error(err.message || "Sync failed.");
+        } finally {
+            setSyncing(null);
+        }
+    };
 
     const saveProfile = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -188,44 +215,96 @@ export default function InfluencerOnboarding() {
             {/* Profile Form */}
             <div className="bg-white rounded-xl shadow-sm p-6">
                 <h2 className="text-xl font-bold mb-4">Your Profile</h2>
-                <form onSubmit={saveProfile} className="space-y-4">
+                <form onSubmit={saveProfile} className="space-y-5">
+                    {/* Profile picture preview + social sync */}
+                    <div className="flex flex-col sm:flex-row gap-5 items-start">
+                        <div className="flex-shrink-0">
+                            <div className="w-24 h-24 rounded-full bg-gray-100 border-2 border-gray-200 overflow-hidden flex items-center justify-center">
+                                {profilePicUrl ? (
+                                    <img src={profilePicUrl} alt="Preview" className="w-full h-full object-cover" onError={e => (e.target as HTMLImageElement).src = `https://i.pravatar.cc/96`} />
+                                ) : (
+                                    <svg className="w-10 h-10 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                    </svg>
+                                )}
+                            </div>
+                        </div>
+                        <div className="flex-1 space-y-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">Display Name *</label>
+                                <input
+                                    required
+                                    value={displayName}
+                                    onChange={e => setDisplayName(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-violet-500 outline-none"
+                                    placeholder="Your public name"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Profile Picture
+                                    <span className="ml-1 font-normal text-gray-400 text-xs">(auto-synced from Instagram/TikTok)</span>
+                                </label>
+                                <input
+                                    value={profilePicUrl}
+                                    onChange={e => setProfilePicUrl(e.target.value)}
+                                    className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-violet-500 outline-none text-sm"
+                                    placeholder="Paste URL or use Sync buttons below"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Display Name *</label>
-                            <input
-                                required
-                                value={displayName}
-                                onChange={e => setDisplayName(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="Your public name"
-                            />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Profile Picture URL</label>
-                            <input
-                                value={profilePicUrl}
-                                onChange={e => setProfilePicUrl(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="https://..."
-                            />
-                        </div>
-                        <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Instagram Handle</label>
-                            <input
-                                value={instagramHandle}
-                                onChange={e => setInstagramHandle(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="@yourhandle"
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    value={instagramHandle}
+                                    onChange={e => setInstagramHandle(e.target.value)}
+                                    className="flex-1 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-violet-500 outline-none"
+                                    placeholder="yourhandle"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => syncFromSocial("instagram")}
+                                    disabled={syncing !== null}
+                                    className="px-3 py-2 text-xs font-bold bg-gradient-to-r from-pink-500 to-orange-500 text-white rounded-lg hover:opacity-90 disabled:opacity-50 transition-opacity whitespace-nowrap flex items-center gap-1"
+                                    title="Sync profile picture and follower count from Instagram"
+                                >
+                                    {syncing === "instagram" ? (
+                                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                    ) : (
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                    )}
+                                    Sync
+                                </button>
+                            </div>
                         </div>
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">TikTok Handle</label>
-                            <input
-                                value={tiktokHandle}
-                                onChange={e => setTiktokHandle(e.target.value)}
-                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
-                                placeholder="@yourhandle"
-                            />
+                            <div className="flex gap-2">
+                                <input
+                                    value={tiktokHandle}
+                                    onChange={e => setTiktokHandle(e.target.value)}
+                                    className="flex-1 border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-violet-500 outline-none"
+                                    placeholder="yourhandle"
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => syncFromSocial("tiktok")}
+                                    disabled={syncing !== null}
+                                    className="px-3 py-2 text-xs font-bold bg-black text-white rounded-lg hover:opacity-80 disabled:opacity-50 transition-opacity whitespace-nowrap flex items-center gap-1"
+                                    title="Sync profile picture and follower count from TikTok"
+                                >
+                                    {syncing === "tiktok" ? (
+                                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                    ) : (
+                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                                    )}
+                                    Sync
+                                </button>
+                            </div>
                         </div>
                     </div>
                     <div>
