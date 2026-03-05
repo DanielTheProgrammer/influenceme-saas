@@ -1,5 +1,6 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy.pool import NullPool
 from dotenv import load_dotenv
 import os
 
@@ -9,27 +10,25 @@ Base = declarative_base()
 
 _raw_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./local_dev.db")
 
-# Normalize Postgres URLs to use psycopg (psycopg3) — handles pgbouncer
-# transaction mode without named prepared statement conflicts.
-if _raw_url.startswith("postgresql+asyncpg://"):
-    ASYNC_DATABASE_URL = _raw_url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+# Normalize to asyncpg driver URL
+if _raw_url.startswith("postgresql+psycopg://"):
+    ASYNC_DATABASE_URL = _raw_url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
 elif _raw_url.startswith("postgresql://"):
-    ASYNC_DATABASE_URL = _raw_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    ASYNC_DATABASE_URL = _raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 else:
     ASYNC_DATABASE_URL = _raw_url
 
 _is_postgres = ASYNC_DATABASE_URL.startswith("postgresql")
 
 if _is_postgres:
-    # Supabase pooler requires SSL; use a small pool for serverless
+    # NullPool for serverless + statement_cache_size=0 for pgbouncer compatibility.
+    # Session pooler (port 5432) gives each client a dedicated backend connection
+    # so prepared statement names never collide across connections.
     async_engine = create_async_engine(
         ASYNC_DATABASE_URL,
         echo=False,
-        pool_size=2,
-        max_overflow=0,
-        pool_timeout=10,
-        pool_recycle=300,
-        connect_args={"sslmode": "require"},
+        poolclass=NullPool,
+        connect_args={"statement_cache_size": 0},
     )
 else:
     async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False)
