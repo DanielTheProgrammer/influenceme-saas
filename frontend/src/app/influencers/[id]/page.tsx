@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, use } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import GenAIStudio from "@/components/GenAIStudio";
@@ -25,7 +25,8 @@ interface Influencer {
     services: Service[];
 }
 
-export default function InfluencerProfilePage({ params }: { params: { id: string } }) {
+export default function InfluencerProfilePage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const { data: session } = useSession();
     const router = useRouter();
 
@@ -35,7 +36,7 @@ export default function InfluencerProfilePage({ params }: { params: { id: string
     const [selectedService, setSelectedService] = useState<Service | null>(null);
 
     useEffect(() => {
-        fetch(`${API_URL}/marketplace/influencers/${params.id}`)
+        fetch(`${API_URL}/marketplace/influencers/${id}`)
             .then((res) => {
                 if (!res.ok) throw new Error("Influencer not found.");
                 return res.json();
@@ -48,12 +49,11 @@ export default function InfluencerProfilePage({ params }: { params: { id: string
                 setError(err.message);
                 setLoading(false);
             });
-    }, [params.id]);
+    }, [id]);
 
     const handleServiceSelect = (service: Service) => {
-        // Auth check — redirect to login if not authenticated
         if (!session) {
-            router.push(`/login?redirect=/influencers/${params.id}`);
+            router.push(`/login?redirect=/influencers/${id}`);
             return;
         }
         setSelectedService(service);
