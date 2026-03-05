@@ -52,7 +52,7 @@ async def health_check():
     try:
         async with database.async_engine.begin() as conn:
             from sqlalchemy import text
-        await conn.execute(text("SELECT 1"))
+            await conn.execute(text("SELECT 1"))
         return {"status": "ok", "db": safe_url}
     except Exception as e:
         return {"status": "error", "db": safe_url, "detail": str(e)}
