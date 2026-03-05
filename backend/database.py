@@ -10,25 +10,27 @@ Base = declarative_base()
 
 _raw_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./local_dev.db")
 
-# Normalize to asyncpg driver URL
-if _raw_url.startswith("postgresql+psycopg://"):
-    ASYNC_DATABASE_URL = _raw_url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
+# Normalize to psycopg3 driver URL.
+# psycopg3 with prepared_threshold=None is officially compatible with
+# pgbouncer transaction mode (port 6543) — no named prepared statements.
+if _raw_url.startswith("postgresql+asyncpg://"):
+    ASYNC_DATABASE_URL = _raw_url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
 elif _raw_url.startswith("postgresql://"):
-    ASYNC_DATABASE_URL = _raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    ASYNC_DATABASE_URL = _raw_url.replace("postgresql://", "postgresql+psycopg://", 1)
 else:
     ASYNC_DATABASE_URL = _raw_url
 
 _is_postgres = ASYNC_DATABASE_URL.startswith("postgresql")
 
 if _is_postgres:
-    # NullPool for serverless + statement_cache_size=0 for pgbouncer compatibility.
-    # Session pooler (port 5432) gives each client a dedicated backend connection
-    # so prepared statement names never collide across connections.
+    # NullPool for serverless (no persistent connections across invocations).
+    # prepared_threshold=None disables prepared statements → pgbouncer transaction
+    # mode compatible.
     async_engine = create_async_engine(
         ASYNC_DATABASE_URL,
         echo=False,
         poolclass=NullPool,
-        connect_args={"statement_cache_size": 0, "ssl": "require"},
+        connect_args={"prepared_threshold": None},
     )
 else:
     async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False)
