@@ -53,6 +53,8 @@ class InfluencerProfileBase(BaseModel):
     instagram_handle: Optional[str] = None
     tiktok_handle: Optional[str] = None
     profile_picture_url: Optional[str] = None
+    followers_count: Optional[int] = None
+    recent_post_urls: Optional[List[str]] = None
 
 
 class InfluencerProfileCreate(InfluencerProfileBase):

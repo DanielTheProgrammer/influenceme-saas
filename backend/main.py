@@ -51,6 +51,8 @@ def on_startup():
             "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS verification_code VARCHAR",
             "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS instagram_verification_status VARCHAR DEFAULT 'unverified'",
             "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS tiktok_verification_status VARCHAR DEFAULT 'unverified'",
+            "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS followers_count INTEGER",
+            "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS recent_post_urls TEXT",
         ]
         try:
             with database.engine.connect() as conn:

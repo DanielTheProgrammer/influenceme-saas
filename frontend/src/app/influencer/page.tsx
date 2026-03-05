@@ -50,6 +50,8 @@ export default function InfluencerOnboarding() {
     const [instagramHandle, setInstagramHandle] = useState("");
     const [tiktokHandle, setTiktokHandle] = useState("");
     const [profilePicUrl, setProfilePicUrl] = useState("");
+    const [followersCount, setFollowersCount] = useState("");
+    const [recentPostUrls, setRecentPostUrls] = useState<string[]>(["", "", "", "", "", ""]);
 
     // New service form state
     const [showServiceForm, setShowServiceForm] = useState(false);
@@ -76,6 +78,11 @@ export default function InfluencerOnboarding() {
                     setInstagramHandle(data.instagram_handle || "");
                     setTiktokHandle(data.tiktok_handle || "");
                     setProfilePicUrl(data.profile_picture_url || "");
+                    setFollowersCount(data.followers_count?.toString() || "");
+                    if (data.recent_post_urls) {
+                        const padded = [...data.recent_post_urls, "", "", "", "", "", ""].slice(0, 6);
+                        setRecentPostUrls(padded);
+                    }
                 }
                 setLoading(false);
             })
@@ -97,6 +104,8 @@ export default function InfluencerOnboarding() {
                     instagram_handle: instagramHandle || null,
                     tiktok_handle: tiktokHandle || null,
                     profile_picture_url: profilePicUrl || null,
+                    followers_count: followersCount ? parseInt(followersCount) : null,
+                    recent_post_urls: recentPostUrls.filter(u => u.trim() !== "") || null,
                 }),
             });
             if (!res.ok) throw new Error("Failed to save profile.");
@@ -226,6 +235,44 @@ export default function InfluencerOnboarding() {
                             className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
                             placeholder="Tell fans about yourself..."
                         />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">Followers Count</label>
+                        <input
+                            type="number"
+                            min="0"
+                            value={followersCount}
+                            onChange={e => setFollowersCount(e.target.value)}
+                            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="e.g. 25000"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Combined followers across platforms shown on your profile.</p>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Recent Post URLs <span className="text-gray-400 font-normal">(up to 6 images)</span></label>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                            {recentPostUrls.map((url, i) => (
+                                <div key={i} className="space-y-1">
+                                    {url && (
+                                        <div className="aspect-square rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+                                            <img src={url} alt="" className="w-full h-full object-cover" onError={e => (e.target as HTMLImageElement).style.display = "none"} />
+                                        </div>
+                                    )}
+                                    <input
+                                        type="url"
+                                        value={url}
+                                        onChange={e => {
+                                            const next = [...recentPostUrls];
+                                            next[i] = e.target.value;
+                                            setRecentPostUrls(next);
+                                        }}
+                                        className="w-full border border-gray-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-blue-500 outline-none"
+                                        placeholder={`Post ${i + 1} URL`}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        <p className="text-xs text-gray-400 mt-2">Paste direct image URLs from your Instagram/TikTok posts.</p>
                     </div>
                     <button
                         type="submit"

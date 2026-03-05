@@ -8,6 +8,7 @@ from sqlalchemy import (
     Boolean,
     ForeignKey,
     Enum as SQLAlchemyEnum,
+    JSON,
 )
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -48,6 +49,10 @@ class InfluencerProfile(Base):
     stripe_onboarding_complete = Column(Boolean, default=False)
     subscription_tier = Column(String, nullable=True)
     subscription_status = Column(String, nullable=True)
+
+    # Audience & content
+    followers_count = Column(Integer, nullable=True)
+    recent_post_urls = Column(JSON, nullable=True)  # List[str] of image URLs
 
     # Social verification
     verification_code = Column(String, nullable=True)
