@@ -37,6 +37,20 @@ def on_startup():
     except Exception as e:
         print(f"[startup] WARNING: Could not create tables: {e}")
 
+    # Run incremental column migrations (safe to re-run)
+    _migrations = [
+        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS verification_code VARCHAR",
+        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS instagram_verification_status VARCHAR DEFAULT 'unverified'",
+        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS tiktok_verification_status VARCHAR DEFAULT 'unverified'",
+    ]
+    try:
+        with database.engine.connect() as conn:
+            for sql in _migrations:
+                conn.execute(text(sql))
+            conn.commit()
+    except Exception as e:
+        print(f"[startup] WARNING: Migration failed: {e}")
+
 
 @app.get("/")
 def read_root():
