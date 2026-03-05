@@ -1,6 +1,5 @@
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
-from sqlalchemy.pool import NullPool
 from sqlalchemy import text
 from dotenv import load_dotenv
 import os
@@ -23,12 +22,18 @@ else:
 
 _is_postgres = ASYNC_DATABASE_URL.startswith("postgresql")
 
-# Use NullPool for serverless (Vercel) — no persistent connections
-async_engine = create_async_engine(
-    ASYNC_DATABASE_URL,
-    echo=False,
-    poolclass=NullPool if _is_postgres else None,
-)
+if _is_postgres:
+    # Small pool for serverless — psycopg3 + NullPool has lifecycle issues
+    async_engine = create_async_engine(
+        ASYNC_DATABASE_URL,
+        echo=False,
+        pool_size=2,
+        max_overflow=0,
+        pool_timeout=10,
+        pool_recycle=300,
+    )
+else:
+    async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False)
 
 AsyncSessionLocal = sessionmaker(
     bind=async_engine, class_=AsyncSession, expire_on_commit=False
