@@ -11,7 +11,9 @@ Base = declarative_base()
 
 ASYNC_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./local_dev.db")
 
-async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=True)
+# statement_cache_size=0 required for Supabase transaction pooler (port 6543)
+_connect_args = {"statement_cache_size": 0} if "pooler.supabase.com" in ASYNC_DATABASE_URL else {}
+async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False, connect_args=_connect_args)
 AsyncSessionLocal = sessionmaker(
     bind=async_engine, class_=AsyncSession, expire_on_commit=False
 )
