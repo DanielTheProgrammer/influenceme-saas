@@ -1,6 +1,6 @@
 from models import UserRole, EngagementType, RequestStatus
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 
@@ -26,9 +26,7 @@ class UserCreate(UserBase):
 class User(UserBase):
     id: int
     is_active: bool
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EngagementServiceBase(BaseModel):
@@ -46,9 +44,7 @@ class EngagementServiceCreate(EngagementServiceBase):
 class EngagementService(EngagementServiceBase):
     id: int
     influencer_id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class InfluencerProfileBase(BaseModel):
@@ -70,9 +66,7 @@ class InfluencerProfile(InfluencerProfileBase):
     verification_code: Optional[str] = None
     instagram_verification_status: str = "unverified"
     tiktok_verification_status: str = "unverified"
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class EngagementRequestBase(BaseModel):
@@ -94,9 +88,7 @@ class EngagementRequest(EngagementRequestBase):
     counter_offer_price: Optional[float] = None
     counter_offer_description: Optional[str] = None
     service: Optional[EngagementService] = None
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class RejectRequest(BaseModel):

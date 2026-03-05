@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -40,7 +41,6 @@ export default function FanRequestsPage() {
     const router = useRouter();
     const [requests, setRequests] = useState<EngagementRequest[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         if (status === "unauthenticated") router.push("/login?redirect=/fan/requests");
@@ -57,7 +57,7 @@ export default function FanRequestsPage() {
             if (!res.ok) throw new Error("Failed to fetch requests.");
             setRequests(await res.json());
         } catch (err: any) {
-            setError(err.message);
+            toast.error(err.message);
         } finally {
             setLoading(false);
         }
@@ -74,8 +74,9 @@ export default function FanRequestsPage() {
             });
             if (!res.ok) throw new Error("Action failed.");
             await fetchRequests();
+            toast.success("Done!");
         } catch (err: any) {
-            setError(err.message);
+            toast.error(err.message);
         }
     };
 
@@ -87,8 +88,9 @@ export default function FanRequestsPage() {
             });
             if (!res.ok) throw new Error("Verification failed.");
             await fetchRequests();
+            toast.success("Payment released!");
         } catch (err: any) {
-            setError(err.message);
+            toast.error(err.message);
         }
     };
 
@@ -112,8 +114,6 @@ export default function FanRequestsPage() {
                     Browse Influencers
                 </Link>
             </div>
-
-            {error && <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>}
 
             {requests.length === 0 ? (
                 <div className="text-center py-16 bg-white rounded-xl shadow-sm">

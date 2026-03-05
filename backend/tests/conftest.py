@@ -7,6 +7,10 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 os.environ["DATABASE_URL"] = "sqlite:///./test.db"
 os.environ.setdefault("SECRET_KEY", "test-secret-key-for-unit-tests-only")
+# Disable rate limiting in tests
+os.environ["RATE_LIMIT_LOGIN"] = "10000/minute"
+os.environ["RATE_LIMIT_REGISTER"] = "10000/minute"
+os.environ["RATE_LIMIT_GENAI"] = "10000/minute"
 
 import database
 from main import app

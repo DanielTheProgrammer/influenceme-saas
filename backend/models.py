@@ -46,8 +46,13 @@ class InfluencerProfile(Base):
     profile_picture_url = Column(String)
     stripe_account_id = Column(String, nullable=True)
     stripe_onboarding_complete = Column(Boolean, default=False)
-    subscription_tier = Column(String, nullable=True)  # None, "pro"
-    subscription_status = Column(String, nullable=True)  # "active", "cancelled", etc.
+    subscription_tier = Column(String, nullable=True)
+    subscription_status = Column(String, nullable=True)
+
+    # Social verification
+    verification_code = Column(String, nullable=True)
+    instagram_verification_status = Column(String, default="unverified")  # unverified | pending | verified
+    tiktok_verification_status = Column(String, default="unverified")
 
     # Relationships
     user = relationship("User", back_populates="influencer_profile")

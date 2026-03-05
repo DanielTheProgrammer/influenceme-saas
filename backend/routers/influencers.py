@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.future import select
 from typing import List
+import secrets
 
 router = APIRouter(
     prefix="/influencers",
@@ -33,7 +34,8 @@ def create_or_update_influencer_profile(
         for key, value in profile_data.model_dump().items():
             setattr(db_profile, key, value)
     else:
-        db_profile = models.InfluencerProfile(**profile_data.model_dump(), user_id=current_user.id)
+        code = f"im-{secrets.token_urlsafe(6)}"
+        db_profile = models.InfluencerProfile(**profile_data.model_dump(), user_id=current_user.id, verification_code=code)
         db.add(db_profile)
 
     db.commit()

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 const COMPANY_INSTAGRAM = "influenceme.app";
@@ -46,7 +47,6 @@ export default function InfluencerDashboard() {
 
     const [requests, setRequests] = useState<EngagementRequest[]>([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
     const [noProfile, setNoProfile] = useState(false);
     const [profile, setProfile] = useState<InfluencerProfile | null>(null);
     const [copiedCode, setCopiedCode] = useState(false);
@@ -80,7 +80,8 @@ export default function InfluencerDashboard() {
                         setNoProfile(true);
                         return;
                     }
-                    throw new Error(errorData.detail || "Failed to fetch requests.");
+                    toast.error(errorData.detail || "Failed to fetch requests.");
+                    return;
                 }
 
                 const data: EngagementRequest[] = await requestsRes.json();
@@ -91,7 +92,7 @@ export default function InfluencerDashboard() {
                     setProfile(profileData);
                 }
             } catch (err: any) {
-                setError(err.message);
+                toast.error(err.message);
             } finally {
                 setLoading(false);
             }
@@ -120,6 +121,7 @@ export default function InfluencerDashboard() {
                 const err = await res.json();
                 throw new Error(err.detail || "Failed to submit.");
             }
+            toast.success("DM request submitted! We'll verify it shortly.");
             // Refresh profile
             const profileRes = await fetch(`${API_URL}/influencers/profile`, {
                 headers: { Authorization: `Bearer ${token}` },
@@ -128,7 +130,7 @@ export default function InfluencerDashboard() {
                 setProfile(await profileRes.json());
             }
         } catch (err: any) {
-            setError(err.message);
+            toast.error(err.message);
         }
     };
 
@@ -142,8 +144,8 @@ export default function InfluencerDashboard() {
 
     const handleAction = async (
         id: number,
-        action: "approved" | "rejected" | "counter_offered",
-        payload?: { price?: number; description?: string; reason?: string }
+        action: "approved" | "rejected" | "counter_offered" | "fulfilled",
+        payload?: { price?: number; description?: string; reason?: string; finalUrl?: string }
     ) => {
         let endpoint = "";
         let body: any = {};
@@ -154,11 +156,15 @@ export default function InfluencerDashboard() {
                 break;
             case "rejected":
                 endpoint = `/influencer/requests/${id}/reject`;
-                body = { request_id: id, rejection_reason: payload?.reason || "No reason provided." };
+                body = { rejection_reason: payload?.reason || "No reason provided." };
                 break;
             case "counter_offered":
                 endpoint = `/influencer/requests/${id}/counter-offer`;
-                body = { request_id: id, new_price: payload?.price, new_description: payload?.description };
+                body = { new_price: payload?.price, new_description: payload?.description };
+                break;
+            case "fulfilled":
+                endpoint = `/influencer/requests/${id}/fulfill`;
+                body = { final_image_url: payload?.finalUrl || null };
                 break;
             default:
                 return;
@@ -185,8 +191,15 @@ export default function InfluencerDashboard() {
             });
             const updatedData: EngagementRequest[] = await updatedResponse.json();
             setRequests(updatedData);
+            const msgs: Record<string, string> = {
+                approved: "Request approved!",
+                rejected: "Request rejected.",
+                counter_offered: "Counter-offer sent!",
+                fulfilled: "Marked as fulfilled!",
+            };
+            toast.success(msgs[action] || "Done!");
         } catch (err: any) {
-            setError(err.message);
+            toast.error(err.message);
         }
     };
 
@@ -328,10 +341,6 @@ export default function InfluencerDashboard() {
         <div className="max-w-5xl mx-auto py-8">
             <h1 className="text-3xl font-bold mb-8">Influencer Dashboard</h1>
 
-            {error && (
-                <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>
-            )}
-
             {/* Social Verification Panels */}
             {profile && (profile.instagram_handle || profile.tiktok_handle) && (
                 <div className="mb-8">
@@ -396,7 +405,7 @@ export default function InfluencerDashboard() {
                                             request.status === "counter_offered" ? "bg-purple-100 text-purple-800" :
                                             "bg-gray-100 text-gray-800"
                                         }`}>
-                                            {request.status.replace("_", " ").toUpperCase()}
+                                            {request.status.replace(/_/g, " ").toUpperCase()}
                                         </span>
                                     </div>
                                     <p className="text-gray-600 mb-1">
@@ -441,6 +450,17 @@ export default function InfluencerDashboard() {
                                             className="px-6 py-2 bg-red-100 text-red-600 font-bold rounded-lg hover:bg-red-200 transition-colors"
                                         >
                                             Reject
+                                        </button>
+                                    </div>
+                                )}
+                                {request.status === "approved" && (
+                                    <div className="flex flex-col gap-2 w-full md:w-auto">
+                                        <p className="text-green-700 text-sm font-medium text-center">Ready to fulfill</p>
+                                        <button
+                                            onClick={() => handleAction(request.id, "fulfilled")}
+                                            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors"
+                                        >
+                                            Mark as Fulfilled
                                         </button>
                                     </div>
                                 )}

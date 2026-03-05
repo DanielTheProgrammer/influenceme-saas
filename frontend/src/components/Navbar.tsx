@@ -38,6 +38,9 @@ export default function Navbar() {
                                     <Link href="/dashboard" className="text-gray-600 hover:text-blue-600 font-medium transition-colors">
                                         Dashboard
                                     </Link>
+                                    <Link href="/influencer/analytics" className="text-gray-600 hover:text-blue-600 font-medium transition-colors">
+                                        Analytics
+                                    </Link>
                                     <Link href="/influencer" className="text-gray-600 hover:text-blue-600 font-medium transition-colors">
                                         Profile
                                     </Link>
@@ -94,6 +97,7 @@ export default function Navbar() {
                             {isInfluencer && (
                                 <>
                                     <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="block text-gray-700 font-medium">Dashboard</Link>
+                                    <Link href="/influencer/analytics" onClick={() => setMenuOpen(false)} className="block text-gray-700 font-medium">Analytics</Link>
                                     <Link href="/influencer" onClick={() => setMenuOpen(false)} className="block text-gray-700 font-medium">Profile</Link>
                                 </>
                             )}

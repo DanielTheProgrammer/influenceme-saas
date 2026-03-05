@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -42,8 +43,6 @@ export default function InfluencerOnboarding() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [error, setError] = useState<string | null>(null);
-    const [success, setSuccess] = useState<string | null>(null);
 
     // Profile form state
     const [displayName, setDisplayName] = useState("");
@@ -103,9 +102,9 @@ export default function InfluencerOnboarding() {
             if (!res.ok) throw new Error("Failed to save profile.");
             const data = await res.json();
             setProfile(data);
-            setSuccess("Profile saved!");
+            toast.success("Profile saved!");
         } catch (err: any) {
-            setError(err.message);
+            toast.error(err.message);
         } finally {
             setSaving(false);
         }
@@ -136,8 +135,9 @@ export default function InfluencerOnboarding() {
             setServicePrice("");
             setServiceDescription("");
             setServiceDays("");
+            toast.success("Service added!");
         } catch (err: any) {
-            setError(err.message);
+            toast.error(err.message);
         }
     };
 
@@ -151,8 +151,9 @@ export default function InfluencerOnboarding() {
                 headers: { Authorization: `Bearer ${token}` },
             });
             setProfile(await profileRes.json());
+            toast.success("Service removed.");
         } catch (err: any) {
-            setError(err.message);
+            toast.error(err.message);
         }
     };
 
@@ -172,9 +173,6 @@ export default function InfluencerOnboarding() {
     return (
         <div className="max-w-3xl mx-auto py-8 space-y-8">
             <h1 className="text-3xl font-bold">Influencer Profile</h1>
-
-            {error && <div className="p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>}
-            {success && <div className="p-3 bg-green-100 text-green-700 rounded-lg">{success}</div>}
 
             {/* Profile Form */}
             <div className="bg-white rounded-xl shadow-sm p-6">

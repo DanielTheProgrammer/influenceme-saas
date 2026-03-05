@@ -2,10 +2,13 @@ import models, database, auth
 
 import os
 import io
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel
 from typing import Optional
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
+limiter = Limiter(key_func=get_remote_address)
 router = APIRouter(prefix="/genai", tags=["genai"])
 
 
@@ -26,7 +29,9 @@ def get_stability_api():
 
 
 @router.post("/generate-preview", status_code=status.HTTP_201_CREATED)
-async def generate_preview_image(
+@limiter.limit(os.getenv("RATE_LIMIT_GENAI", "30/minute"))
+def generate_preview_image(
+    request: Request,
     req: GenerationRequest,
     current_user: models.User = Depends(auth.get_current_active_user)
 ):

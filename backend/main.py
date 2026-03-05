@@ -1,9 +1,13 @@
 import models, schemas, database, auth
 from routers import marketplace, genai, influencer, influencers, dashboard, payments
 
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy import text
@@ -13,11 +17,15 @@ import os
 
 load_dotenv()
 
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(
     title="Influencer Engagement SaaS",
     description="A marketplace for fans to purchase engagements from influencers.",
     version="0.1.0"
 )
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
 
@@ -37,19 +45,20 @@ def on_startup():
     except Exception as e:
         print(f"[startup] WARNING: Could not create tables: {e}")
 
-    # Run incremental column migrations (safe to re-run)
-    _migrations = [
-        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS verification_code VARCHAR",
-        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS instagram_verification_status VARCHAR DEFAULT 'unverified'",
-        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS tiktok_verification_status VARCHAR DEFAULT 'unverified'",
-    ]
-    try:
-        with database.engine.connect() as conn:
-            for sql in _migrations:
-                conn.execute(text(sql))
-            conn.commit()
-    except Exception as e:
-        print(f"[startup] WARNING: Migration failed: {e}")
+    # Run incremental column migrations — PostgreSQL only (SQLite gets fresh tables via create_all)
+    if database.DATABASE_URL.startswith("postgresql"):
+        _migrations = [
+            "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS verification_code VARCHAR",
+            "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS instagram_verification_status VARCHAR DEFAULT 'unverified'",
+            "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS tiktok_verification_status VARCHAR DEFAULT 'unverified'",
+        ]
+        try:
+            with database.engine.connect() as conn:
+                for sql in _migrations:
+                    conn.execute(text(sql))
+                conn.commit()
+        except Exception as e:
+            print(f"[startup] WARNING: Migration failed: {e}")
 
 
 @app.get("/")
@@ -70,7 +79,9 @@ def health_check():
 
 
 @app.post("/token", response_model=schemas.Token)
+@limiter.limit(os.getenv("RATE_LIMIT_LOGIN", "20/minute"))
 def login_for_access_token(
+    request: Request,
     form_data: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(database.get_db)
 ):
@@ -89,7 +100,8 @@ def login_for_access_token(
 
 
 @app.post("/auth/register", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
-def register_user(user: schemas.UserCreate, db: Session = Depends(database.get_db)):
+@limiter.limit(os.getenv("RATE_LIMIT_REGISTER", "10/minute"))
+def register_user(request: Request, user: schemas.UserCreate, db: Session = Depends(database.get_db)):
     if db.execute(select(models.User).filter(models.User.email == user.email)).scalars().first():
         raise HTTPException(status_code=400, detail="Email already registered")
 
