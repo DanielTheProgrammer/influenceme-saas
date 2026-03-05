@@ -1,5 +1,5 @@
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, declarative_base
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base, Session
 from sqlalchemy.pool import NullPool
 from dotenv import load_dotenv
 import os
@@ -8,35 +8,32 @@ load_dotenv()
 
 Base = declarative_base()
 
-_raw_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./local_dev.db")
+_raw_url = os.getenv("DATABASE_URL", "sqlite:///./local_dev.db")
 
-# Normalize to asyncpg driver URL
-if _raw_url.startswith("postgresql+psycopg://"):
-    ASYNC_DATABASE_URL = _raw_url.replace("postgresql+psycopg://", "postgresql+asyncpg://", 1)
-elif _raw_url.startswith("postgresql://"):
-    ASYNC_DATABASE_URL = _raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+# Normalize URL: strip async driver prefixes, use plain psycopg2 for Postgres.
+# psycopg2 uses unnamed prepared statements → works with pgbouncer transaction mode.
+if _raw_url.startswith("postgresql+asyncpg://"):
+    DATABASE_URL = _raw_url.replace("postgresql+asyncpg://", "postgresql://", 1)
+elif _raw_url.startswith("postgresql+psycopg://"):
+    DATABASE_URL = _raw_url.replace("postgresql+psycopg://", "postgresql://", 1)
+elif _raw_url.startswith("sqlite+aiosqlite://"):
+    DATABASE_URL = _raw_url.replace("sqlite+aiosqlite://", "sqlite://", 1)
 else:
-    ASYNC_DATABASE_URL = _raw_url
+    DATABASE_URL = _raw_url
 
-_is_postgres = ASYNC_DATABASE_URL.startswith("postgresql")
+_is_postgres = DATABASE_URL.startswith("postgresql")
 
-if _is_postgres:
-    # NullPool for serverless. statement_cache_size=0 tells asyncpg not to cache
-    # prepared statements — required for pgbouncer transaction mode compatibility.
-    async_engine = create_async_engine(
-        ASYNC_DATABASE_URL,
-        echo=False,
-        poolclass=NullPool,
-        connect_args={"statement_cache_size": 0},
-    )
-else:
-    async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False)
-
-AsyncSessionLocal = sessionmaker(
-    bind=async_engine, class_=AsyncSession, expire_on_commit=False
+engine = create_engine(
+    DATABASE_URL,
+    poolclass=NullPool if _is_postgres else None,
 )
 
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False)
 
-async def get_db() -> AsyncSession:
-    async with AsyncSessionLocal() as session:
-        yield session
+
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

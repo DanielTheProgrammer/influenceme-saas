@@ -2,8 +2,8 @@ import models, schemas, database
 
 from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
+from sqlalchemy.orm import Session
 from sqlalchemy.future import select
-from sqlalchemy.ext.asyncio import AsyncSession
 import jwt
 from jwt.exceptions import InvalidTokenError
 from datetime import datetime, timedelta
@@ -32,10 +32,10 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None):
     to_encode = data.copy()
     expire = datetime.utcnow() + (expires_delta or timedelta(minutes=15))
     to_encode.update({"exp": expire})
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)  # PyJWT returns str directly
+    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession = Depends(database.get_db)):
+def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(database.get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -50,14 +50,13 @@ async def get_current_user(token: str = Depends(oauth2_scheme), db: AsyncSession
     except InvalidTokenError:
         raise credentials_exception
 
-    result = await db.execute(select(models.User).where(models.User.email == token_data.email))
-    user = result.scalars().first()
+    user = db.execute(select(models.User).where(models.User.email == token_data.email)).scalars().first()
     if user is None:
         raise credentials_exception
     return user
 
 
-async def get_current_active_user(current_user: models.User = Depends(get_current_user)):
+def get_current_active_user(current_user: models.User = Depends(get_current_user)):
     if not current_user.is_active:
         raise HTTPException(status_code=400, detail="Inactive user")
     return current_user
