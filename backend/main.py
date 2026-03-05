@@ -32,13 +32,30 @@ app.add_middleware(
 
 @app.on_event("startup")
 async def on_startup():
-    async with database.async_engine.begin() as conn:
-        await conn.run_sync(database.Base.metadata.create_all)
+    try:
+        async with database.async_engine.begin() as conn:
+            await conn.run_sync(database.Base.metadata.create_all)
+    except Exception as e:
+        print(f"[startup] WARNING: Could not create tables: {e}")
 
 
 @app.get("/")
 def read_root():
     return {"message": "Welcome to the Influencer Engagement Platform API"}
+
+
+@app.get("/health")
+async def health_check():
+    db_url = os.getenv("DATABASE_URL", "NOT SET")
+    # Mask password in URL for safety
+    safe_url = db_url.split("@")[-1] if "@" in db_url else db_url
+    try:
+        async with database.async_engine.begin() as conn:
+            from sqlalchemy import text
+        await conn.execute(text("SELECT 1"))
+        return {"status": "ok", "db": safe_url}
+    except Exception as e:
+        return {"status": "error", "db": safe_url, "detail": str(e)}
 
 
 # --- Authentication ---
