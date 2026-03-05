@@ -28,7 +28,7 @@ if _is_postgres:
         ASYNC_DATABASE_URL,
         echo=False,
         poolclass=NullPool,
-        connect_args={"statement_cache_size": 0},
+        connect_args={"statement_cache_size": 0, "ssl": "require"},
     )
 else:
     async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False)
