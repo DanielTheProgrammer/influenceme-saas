@@ -9,25 +9,26 @@ load_dotenv()
 
 Base = declarative_base()
 
-ASYNC_DATABASE_URL = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./local_dev.db")
+_raw_url = os.getenv("DATABASE_URL", "sqlite+aiosqlite:///./local_dev.db")
 
-if ASYNC_DATABASE_URL.startswith("postgresql"):
-    import asyncpg as _asyncpg
-
-    # Build the raw asyncpg URL (without the +asyncpg dialect prefix)
-    _asyncpg_dsn = ASYNC_DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://").replace("postgresql://", "postgresql://")
-
-    async def _async_creator():
-        """Create asyncpg connection with prepared statements disabled (required for Supabase transaction pooler)."""
-        return await _asyncpg.connect(_asyncpg_dsn, statement_cache_size=0)
-
-    async_engine = create_async_engine(
-        "postgresql+asyncpg://",  # placeholder — actual connection via async_creator
-        async_creator=_async_creator,
-        poolclass=NullPool,
-    )
+# Normalize Postgres URLs to use psycopg (psycopg3) which works correctly
+# with pgbouncer transaction mode (no named prepared statement conflicts).
+# Accept any postgresql+asyncpg:// or postgresql:// prefix.
+if _raw_url.startswith("postgresql+asyncpg://"):
+    ASYNC_DATABASE_URL = _raw_url.replace("postgresql+asyncpg://", "postgresql+psycopg://", 1)
+elif _raw_url.startswith("postgresql://"):
+    ASYNC_DATABASE_URL = _raw_url.replace("postgresql://", "postgresql+psycopg://", 1)
 else:
-    async_engine = create_async_engine(ASYNC_DATABASE_URL, echo=False)
+    ASYNC_DATABASE_URL = _raw_url
+
+_is_postgres = ASYNC_DATABASE_URL.startswith("postgresql")
+
+# Use NullPool for serverless (Vercel) — no persistent connections
+async_engine = create_async_engine(
+    ASYNC_DATABASE_URL,
+    echo=False,
+    poolclass=NullPool if _is_postgres else None,
+)
 
 AsyncSessionLocal = sessionmaker(
     bind=async_engine, class_=AsyncSession, expire_on_commit=False
