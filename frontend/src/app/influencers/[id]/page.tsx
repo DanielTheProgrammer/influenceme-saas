@@ -175,7 +175,7 @@ export default function InfluencerProfilePage({ params }: { params: Promise<{ id
                         <div className="flex flex-wrap gap-3 text-sm">
                             {influencer.instagram_handle && (
                                 <a
-                                    href={`https://instagram.com/${influencer.instagram_handle}`}
+                                    href={`https://www.instagram.com/${influencer.instagram_handle}/`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-1.5 text-gray-500 hover:text-pink-600 transition-colors"
@@ -190,7 +190,7 @@ export default function InfluencerProfilePage({ params }: { params: Promise<{ id
                             )}
                             {influencer.tiktok_handle && (
                                 <a
-                                    href={`https://tiktok.com/@${influencer.tiktok_handle}`}
+                                    href={`https://www.tiktok.com/@${influencer.tiktok_handle}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="flex items-center gap-1.5 text-gray-500 hover:text-black transition-colors"
