@@ -180,7 +180,7 @@ export default function InfluencerOnboarding() {
     if (status === "unauthenticated") return null;
 
     return (
-        <div className="max-w-3xl mx-auto py-8 space-y-8">
+        <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
             <h1 className="text-3xl font-bold">Influencer Profile</h1>
 
             {/* Profile Form */}

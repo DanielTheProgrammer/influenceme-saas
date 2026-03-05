@@ -96,7 +96,7 @@ export default function FanRequestsPage() {
 
     if (status === "loading" || loading) {
         return (
-            <div className="max-w-4xl mx-auto py-8">
+            <div className="max-w-4xl mx-auto px-4 py-8">
                 <div className="animate-pulse space-y-4">
                     {[1, 2, 3].map(i => <div key={i} className="h-32 bg-gray-200 rounded-xl" />)}
                 </div>
@@ -107,7 +107,7 @@ export default function FanRequestsPage() {
     if (status === "unauthenticated") return null;
 
     return (
-        <div className="max-w-4xl mx-auto py-8">
+        <div className="max-w-4xl mx-auto px-4 py-8">
             <div className="flex justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold">My Requests</h1>
                 <Link href="/browse" className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">

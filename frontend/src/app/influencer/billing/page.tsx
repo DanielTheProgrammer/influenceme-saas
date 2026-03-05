@@ -104,7 +104,7 @@ export default function InfluencerBillingPage() {
     const hasStripe = billing?.stripe_onboarding_complete;
 
     return (
-        <div className="max-w-3xl mx-auto py-8 space-y-8">
+        <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
             <div className="flex items-center gap-4 mb-2">
                 <Link href="/influencer" className="text-blue-600 hover:underline text-sm">← Back to Profile</Link>
             </div>

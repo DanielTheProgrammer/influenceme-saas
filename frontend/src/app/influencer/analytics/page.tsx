@@ -102,7 +102,7 @@ export default function InfluencerAnalyticsPage() {
         .slice(0, 10);
 
     return (
-        <div className="max-w-4xl mx-auto py-8 space-y-8">
+        <div className="max-w-4xl mx-auto px-4 py-8 space-y-8">
             <div className="flex items-center justify-between">
                 <h1 className="text-3xl font-bold">Analytics</h1>
                 <Link href="/dashboard" className="text-sm text-blue-600 hover:underline">
