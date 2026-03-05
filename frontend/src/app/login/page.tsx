@@ -9,6 +9,7 @@ function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const redirectTo = searchParams.get("redirect") || "/dashboard";
+    const registered = searchParams.get("registered") === "1";
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -44,6 +45,12 @@ function LoginForm() {
                 <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
                 <p className="text-gray-500 mt-2">Sign in to your InfluenceMe account</p>
             </div>
+
+            {registered && (
+                <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+                    Account created! Sign in below.
+                </div>
+            )}
 
             {error && (
                 <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">

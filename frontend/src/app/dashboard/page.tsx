@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession, signIn } from "next-auth/react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -35,6 +36,7 @@ export default function InfluencerDashboard() {
     const [requests, setRequests] = useState<EngagementRequest[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [noProfile, setNoProfile] = useState(false);
 
     // Auth guard — redirect to login if not authenticated
     useEffect(() => {
@@ -56,6 +58,10 @@ export default function InfluencerDashboard() {
 
                 if (!response.ok) {
                     const errorData = await response.json();
+                    if (response.status === 404 && errorData.detail?.includes("profile")) {
+                        setNoProfile(true);
+                        return;
+                    }
                     throw new Error(errorData.detail || "Failed to fetch requests.");
                 }
 
@@ -167,6 +173,24 @@ export default function InfluencerDashboard() {
 
     if (status === "unauthenticated") {
         return null;
+    }
+
+    if (noProfile) {
+        return (
+            <div className="max-w-2xl mx-auto py-16 text-center">
+                <div className="text-6xl mb-4">👤</div>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Set up your profile first</h1>
+                <p className="text-gray-500 mb-6">
+                    Create your influencer profile and add services before you can receive fan requests.
+                </p>
+                <Link
+                    href="/influencer"
+                    className="inline-block px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                    Create Profile
+                </Link>
+            </div>
+        );
     }
 
     return (
