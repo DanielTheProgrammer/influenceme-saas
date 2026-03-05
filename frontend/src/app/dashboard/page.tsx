@@ -6,6 +6,8 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const COMPANY_INSTAGRAM = "influenceme.app";
+const COMPANY_TIKTOK = "influenceme.app";
 
 interface EngagementRequest {
     id: number;
@@ -29,6 +31,15 @@ interface EngagementRequest {
     };
 }
 
+interface InfluencerProfile {
+    id: number;
+    verification_code: string | null;
+    instagram_handle: string | null;
+    tiktok_handle: string | null;
+    instagram_verification_status: string;
+    tiktok_verification_status: string;
+}
+
 export default function InfluencerDashboard() {
     const { data: session, status } = useSession();
     const router = useRouter();
@@ -37,6 +48,8 @@ export default function InfluencerDashboard() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [noProfile, setNoProfile] = useState(false);
+    const [profile, setProfile] = useState<InfluencerProfile | null>(null);
+    const [copiedCode, setCopiedCode] = useState(false);
 
     // Auth guard — redirect to login if not authenticated
     useEffect(() => {
@@ -50,23 +63,33 @@ export default function InfluencerDashboard() {
     useEffect(() => {
         if (!token) return;
 
-        const fetchRequests = async () => {
+        const fetchData = async () => {
             try {
-                const response = await fetch(`${API_URL}/influencer/requests`, {
-                    headers: { Authorization: `Bearer ${token}` },
-                });
+                const [requestsRes, profileRes] = await Promise.all([
+                    fetch(`${API_URL}/influencer/requests`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                    fetch(`${API_URL}/influencers/profile`, {
+                        headers: { Authorization: `Bearer ${token}` },
+                    }),
+                ]);
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    if (response.status === 404 && errorData.detail?.includes("profile")) {
+                if (!requestsRes.ok) {
+                    const errorData = await requestsRes.json();
+                    if (requestsRes.status === 404 && errorData.detail?.includes("profile")) {
                         setNoProfile(true);
                         return;
                     }
                     throw new Error(errorData.detail || "Failed to fetch requests.");
                 }
 
-                const data: EngagementRequest[] = await response.json();
+                const data: EngagementRequest[] = await requestsRes.json();
                 setRequests(data);
+
+                if (profileRes.ok) {
+                    const profileData: InfluencerProfile = await profileRes.json();
+                    setProfile(profileData);
+                }
             } catch (err: any) {
                 setError(err.message);
             } finally {
@@ -74,8 +97,40 @@ export default function InfluencerDashboard() {
             }
         };
 
-        fetchRequests();
+        fetchData();
     }, [token]);
+
+    const copyCode = (code: string) => {
+        navigator.clipboard.writeText(code);
+        setCopiedCode(true);
+        setTimeout(() => setCopiedCode(false), 2000);
+    };
+
+    const submitVerification = async (platform: "instagram" | "tiktok") => {
+        try {
+            const res = await fetch(`${API_URL}/influencer/verification/request`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({ platform }),
+            });
+            if (!res.ok) {
+                const err = await res.json();
+                throw new Error(err.detail || "Failed to submit.");
+            }
+            // Refresh profile
+            const profileRes = await fetch(`${API_URL}/influencers/profile`, {
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (profileRes.ok) {
+                setProfile(await profileRes.json());
+            }
+        } catch (err: any) {
+            setError(err.message);
+        }
+    };
 
     // State for modals
     const [showCounterOfferForm, setShowCounterOfferForm] = useState(false);
@@ -193,12 +248,121 @@ export default function InfluencerDashboard() {
         );
     }
 
+    const VerificationBadge = ({ status }: { status: string }) => {
+        if (status === "verified") return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-700">Verified</span>;
+        if (status === "pending") return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700">Pending Review</span>;
+        return <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-gray-100 text-gray-600">Unverified</span>;
+    };
+
+    const VerificationPanel = ({
+        platform,
+        handle,
+        status,
+        dmUrl,
+        icon,
+    }: {
+        platform: "instagram" | "tiktok";
+        handle: string | null;
+        status: string;
+        dmUrl: string;
+        icon: React.ReactNode;
+    }) => {
+        if (!handle) return null;
+        const code = profile?.verification_code || "";
+        const dmMessage = encodeURIComponent(`Verification: ${code}`);
+
+        return (
+            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                        {icon}
+                        <span className="font-bold text-gray-900 capitalize">{platform}</span>
+                        <span className="text-gray-500 text-sm">@{handle}</span>
+                    </div>
+                    <VerificationBadge status={status} />
+                </div>
+
+                {status === "verified" ? (
+                    <p className="text-green-600 text-sm">Your {platform} account is verified.</p>
+                ) : status === "pending" ? (
+                    <p className="text-yellow-700 text-sm">We received your DM request and will verify it shortly. Check back later.</p>
+                ) : (
+                    <>
+                        <p className="text-gray-600 text-sm mb-4">
+                            To verify your {platform} account, send a DM to our official {platform} profile with the code below.
+                        </p>
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 font-mono text-sm font-bold tracking-widest text-gray-800">
+                                {code || "Loading..."}
+                            </div>
+                            <button
+                                onClick={() => copyCode(code)}
+                                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                {copiedCode ? "Copied!" : "Copy"}
+                            </button>
+                        </div>
+                        <div className="flex gap-3">
+                            <a
+                                href={`${dmUrl}?text=${dmMessage}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 text-center px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                            >
+                                Open DM
+                            </a>
+                            <button
+                                onClick={() => submitVerification(platform)}
+                                className="flex-1 px-4 py-2 bg-gray-900 text-white font-bold rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                            >
+                                I&apos;ve sent the DM
+                            </button>
+                        </div>
+                    </>
+                )}
+            </div>
+        );
+    };
+
     return (
         <div className="max-w-5xl mx-auto py-8">
             <h1 className="text-3xl font-bold mb-8">Influencer Dashboard</h1>
 
             {error && (
                 <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">{error}</div>
+            )}
+
+            {/* Social Verification Panels */}
+            {profile && (profile.instagram_handle || profile.tiktok_handle) && (
+                <div className="mb-8">
+                    <h2 className="text-xl font-bold mb-4">Social Verification</h2>
+                    <div className="grid md:grid-cols-2 gap-4">
+                        <VerificationPanel
+                            platform="instagram"
+                            handle={profile.instagram_handle}
+                            status={profile.instagram_verification_status}
+                            dmUrl={`https://ig.me/m/${COMPANY_INSTAGRAM}`}
+                            icon={
+                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                                    <circle cx="12" cy="12" r="4"/>
+                                    <circle cx="17.5" cy="6.5" r="0.5" fill="currentColor"/>
+                                </svg>
+                            }
+                        />
+                        <VerificationPanel
+                            platform="tiktok"
+                            handle={profile.tiktok_handle}
+                            status={profile.tiktok_verification_status}
+                            dmUrl={`https://www.tiktok.com/@${COMPANY_TIKTOK}`}
+                            icon={
+                                <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.27 8.27 0 004.83 1.56V6.79a4.85 4.85 0 01-1.06-.1z"/>
+                                </svg>
+                            }
+                        />
+                    </div>
+                </div>
             )}
 
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">

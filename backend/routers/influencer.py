@@ -148,6 +148,33 @@ def fulfill_engagement_request(
     return db_request
 
 
+# ─── Social Verification ───────────────────────────────────────────────────
+
+class VerificationRequest(BaseModel):
+    platform: str  # "instagram" | "tiktok"
+
+
+@router.post("/verification/request")
+def request_verification(
+    body: VerificationRequest,
+    current_user: models.User = Depends(auth.get_current_active_user),
+    db: Session = db_dependency
+):
+    profile = _get_influencer_profile(current_user, db)
+    if body.platform == "instagram":
+        if not profile.instagram_handle:
+            raise HTTPException(status_code=400, detail="No Instagram handle set on your profile.")
+        profile.instagram_verification_status = "pending"
+    elif body.platform == "tiktok":
+        if not profile.tiktok_handle:
+            raise HTTPException(status_code=400, detail="No TikTok handle set on your profile.")
+        profile.tiktok_verification_status = "pending"
+    else:
+        raise HTTPException(status_code=400, detail="Platform must be 'instagram' or 'tiktok'.")
+    db.commit()
+    return {"status": "pending", "platform": body.platform}
+
+
 # ─── Billing / Stripe Connect ──────────────────────────────────────────────
 
 class BillingStatus(BaseModel):
