@@ -43,6 +43,8 @@ export default function InfluencerOnboarding() {
     const [profile, setProfile] = useState<Profile | null>(null);
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [success, setSuccess] = useState<string | null>(null);
 
     // Profile form state
     const [displayName, setDisplayName] = useState("");
