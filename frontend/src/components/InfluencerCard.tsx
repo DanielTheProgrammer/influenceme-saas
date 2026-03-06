@@ -3,20 +3,6 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-
-/** TikTok CDN URLs are CORS-blocked for cross-origin <video> tags.
- *  Route them through our backend proxy which adds the correct Referer header. */
-function toVideoSrc(url: string): string {
-    try {
-        const host = new URL(url).hostname;
-        if (host.includes("tiktok") || host.includes("musical.ly")) {
-            return `${API_URL}/social/video-proxy?url=${encodeURIComponent(url)}`;
-        }
-    } catch { /* non-URL — leave as-is */ }
-    return url;
-}
-
 interface Service {
     engagement_type: string;
     price: number;
@@ -63,7 +49,7 @@ export default function InfluencerCard({ influencer }: { influencer: Influencer 
                 <div className="relative rounded-2xl overflow-hidden h-72 bg-gray-900 shadow-lg hover:shadow-2xl transition-all duration-300 group-hover:scale-[1.02]">
                     {/* Video background */}
                     <video
-                        src={toVideoSrc(influencer.viral_video_url!)}
+                        src={influencer.viral_video_url!}
                         autoPlay
                         loop
                         muted

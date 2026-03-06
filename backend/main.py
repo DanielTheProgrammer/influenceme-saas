@@ -41,45 +41,61 @@ app.add_middleware(
 
 def _refresh_viral_videos_background():
     """
-    Background daemon thread: replaces placeholder Google CDN demo videos with real
-    CDN mp4 URLs fetched via yt-dlp from the influencer's actual TikTok/Instagram account.
+    Background daemon thread: downloads the most-viral TikTok video for each
+    influencer who has a social handle, saves it to /tmp, then updates the DB
+    with the backend URL at which it can be served.
 
-    Runs once per server cold-start.  Processes influencers one at a time so each
-    yt-dlp call (~10-20 s) doesn't block HTTP request handling.
+    Serving from our own backend avoids TikTok CDN CORS blocks and signed-URL
+    expiry (CDN URLs expire in ~5 minutes; local files last for the lifetime of
+    the Vercel function instance).
+
+    Re-runs on every cold start so files are always fresh.
     """
-    _PLACEHOLDER = "commondatastorage.googleapis.com"
     try:
-        from routers.social import _get_viral_video_url
+        from routers.social import download_viral_video, _video_file_path
+        import os
 
         with database.engine.connect() as conn:
             rows = conn.execute(text(
                 "SELECT id, tiktok_handle, instagram_handle FROM influencer_profiles "
-                "WHERE (viral_video_url IS NULL OR viral_video_url LIKE :p) "
-                "  AND (tiktok_handle IS NOT NULL OR instagram_handle IS NOT NULL)"
-            ), {"p": f"%{_PLACEHOLDER}%"}).fetchall()
+                "WHERE tiktok_handle IS NOT NULL OR instagram_handle IS NOT NULL"
+            )).fetchall()
 
         if not rows:
-            print("[viral_video] All influencers already have real videos — skipping background refresh.")
             return
 
-        print(f"[viral_video] Starting background refresh for {len(rows)} influencer(s)…")
-        for row in rows:
+        # Only process influencers whose local file is missing or empty
+        needs = [r for r in rows
+                 if not os.path.exists(_video_file_path(
+                     "tiktok" if r[1] else "instagram",
+                     (r[1] or r[2]).strip().lstrip("@")
+                 )) or os.path.getsize(_video_file_path(
+                     "tiktok" if r[1] else "instagram",
+                     (r[1] or r[2]).strip().lstrip("@")
+                 )) == 0]
+
+        if not needs:
+            print("[viral_video] All video files already on disk — nothing to download.")
+            return
+
+        print(f"[viral_video] Downloading videos for {len(needs)} influencer(s)…")
+        for row in needs:
             inf_id, tiktok, ig = row[0], row[1], row[2]
             platform = "tiktok" if tiktok else "instagram"
             handle = (tiktok or ig).strip().lstrip("@")
-            print(f"[viral_video] Fetching {platform}/@{handle} (id={inf_id})…")
+            print(f"[viral_video] Downloading {platform}/@{handle} (id={inf_id})…")
             try:
-                url = _get_viral_video_url(platform, handle)
-                if url:
+                video_url = download_viral_video(platform, handle)
+                if video_url:
                     with database.engine.connect() as conn:
                         conn.execute(
                             text("UPDATE influencer_profiles SET viral_video_url = :url WHERE id = :id"),
-                            {"url": url, "id": inf_id},
+                            {"url": video_url, "id": inf_id},
                         )
                         conn.commit()
-                    print(f"[viral_video] id={inf_id} updated → {url[:80]}")
+                    print(f"[viral_video] id={inf_id} → {video_url}")
                 else:
-                    print(f"[viral_video] id={inf_id}: no video found for {platform}/@{handle}")
+                    print(f"[viral_video] id={inf_id}: download failed for {platform}/@{handle}")
             except Exception as exc:
                 print(f"[viral_video] id={inf_id} error: {exc}")
 

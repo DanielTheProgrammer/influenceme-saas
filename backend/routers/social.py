@@ -5,9 +5,7 @@ No authentication required — used during influencer onboarding.
 """
 import re
 import requests as http_requests
-from fastapi import APIRouter, HTTPException, Query, Request
-from fastapi.responses import StreamingResponse
-from urllib.parse import urlparse
+from fastapi import APIRouter, HTTPException, Query
 from typing import Optional, List
 
 router = APIRouter(prefix="/social", tags=["social"])
@@ -100,96 +98,122 @@ def _scrape_followers(platform: str, handle: str) -> Optional[int]:
     return None
 
 
-def _get_viral_video_url(platform: str, handle: str) -> Optional[str]:
+import os
+
+# Videos are downloaded to /tmp so they're served from our own domain (no CORS issues).
+# Files persist as long as the Vercel function instance is warm; the background thread
+# re-downloads them on each cold start.
+_VIDEOS_DIR = "/tmp/viral_videos"
+
+
+def _video_file_path(platform: str, handle: str) -> str:
+    safe = handle.strip().lstrip("@").replace("/", "_")
+    return os.path.join(_VIDEOS_DIR, f"{platform}_{safe}.mp4")
+
+
+def _get_backend_url() -> str:
+    vercel = os.getenv("VERCEL_URL")
+    return f"https://{vercel}" if vercel else "http://localhost:8000"
+
+
+def _pick_most_viral_video_url(platform: str, handle: str) -> Optional[str]:
+    """Flat-extract profile → sort by view_count → return URL of top video page."""
+    try:
+        import yt_dlp
+    except ImportError:
+        return None
+
+    if platform == "tiktok":
+        urls_to_try = [f"https://www.tiktok.com/@{handle}"]
+    elif platform == "instagram":
+        urls_to_try = [f"https://www.instagram.com/{handle}/reels/"]
+    else:
+        return None
+
+    # For TikTok, also try Instagram reels as fallback (Instagram yt-dlp extraction
+    # is sometimes more reliable for accounts with public reels)
+    if platform == "tiktok":
+        urls_to_try.append(f"https://www.instagram.com/{handle}/reels/")
+
+    for profile_url in urls_to_try:
+        try:
+            with yt_dlp.YoutubeDL({"quiet": True, "no_warnings": True, "skip_download": True,
+                                    "extract_flat": True, "playlistend": 15}) as ydl:
+                flat = ydl.extract_info(profile_url, download=False)
+            entries: List[dict] = [e for e in (flat.get("entries") or []) if e and e.get("url")]
+            if entries:
+                entries.sort(key=lambda e: e.get("view_count") or 0, reverse=True)
+                return entries[0]["url"]
+        except Exception:
+            continue
+
+    return None
+
+
+def download_viral_video(platform: str, handle: str) -> Optional[str]:
     """
-    Use yt-dlp to extract the most-viewed video CDN URL from a TikTok or Instagram profile.
+    Download the most-viewed video from a TikTok/Instagram profile to local disk.
 
-    Strategy:
-      1. Flat-extract the profile playlist to get video IDs + view counts (fast, 1 request).
-      2. Sort by view_count, pick the top video.
-      3. Full-extract just that one video to obtain the signed CDN mp4 URL.
+    Returns the backend URL at which the file will be served
+    (e.g. https://backend.vercel.app/social/video-file/tiktok/mayaleex3),
+    or None on failure.
 
-    Notes:
-      - TikTok CDN URLs are signed and expire in ~24h; refresh via re-sync.
-      - Returns None on any failure so callers can degrade gracefully.
-      - Requires yt-dlp in requirements.txt.
+    Storing videos locally avoids TikTok CDN CORS blocks and the ~5-minute
+    expiry on signed CDN URLs.  Files survive as long as the Vercel function
+    instance is warm; the startup background thread re-downloads on cold start.
     """
     try:
-        import yt_dlp  # lazy import — not available in all envs
+        import yt_dlp
     except ImportError:
         print("[viral_video] yt-dlp not installed")
         return None
 
     handle = handle.strip().lstrip("@")
-
-    if platform == "tiktok":
-        profile_url = f"https://www.tiktok.com/@{handle}"
-    elif platform == "instagram":
-        # Reels endpoint returns more videos than the main profile page
-        profile_url = f"https://www.instagram.com/{handle}/reels/"
-    else:
+    best_video_url = _pick_most_viral_video_url(platform, handle)
+    if not best_video_url:
         return None
 
-    # ── Step 1: flat extraction — quick, gets view counts ──────────────────
+    os.makedirs(_VIDEOS_DIR, exist_ok=True)
+    out_path = _video_file_path(platform, handle)
+
     try:
-        flat_opts = {
+        ydl_opts = {
             "quiet": True,
             "no_warnings": True,
-            "skip_download": True,
-            "extract_flat": True,
-            "playlistend": 15,
+            # Smallest combined mp4 — keeps files under ~10 MB
+            "format": "worst[ext=mp4]/worst/mp4",
+            "outtmpl": out_path,
+            "max_filesize": 30 * 1024 * 1024,  # 30 MB hard cap
         }
-        with yt_dlp.YoutubeDL(flat_opts) as ydl:
-            flat_info = ydl.extract_info(profile_url, download=False)
-
-        if not flat_info or not flat_info.get("entries"):
-            return None
-
-        entries: List[dict] = [e for e in flat_info["entries"] if e and e.get("url")]
-        if not entries:
-            return None
-
-        # Sort by view count — TikTok includes this in flat info
-        entries.sort(key=lambda e: e.get("view_count") or 0, reverse=True)
-        best_url = entries[0]["url"]
-
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            ydl.download([best_video_url])
     except Exception as exc:
-        print(f"[viral_video] flat extract failed for {platform}/{handle}: {exc}")
+        print(f"[viral_video] download failed for {platform}/{handle}: {exc}")
         return None
 
-    # ── Step 2: full extraction for the top video → CDN mp4 URL ───────────
-    try:
-        video_opts = {
-            "quiet": True,
-            "no_warnings": True,
-            "skip_download": True,
-            "format": "mp4/best[ext=mp4]/best",
-        }
-        with yt_dlp.YoutubeDL(video_opts) as ydl:
-            video_info = ydl.extract_info(best_url, download=False)
-
-        if not video_info:
-            return None
-
-        # Direct URL shortcut (some extractors set this at top level)
-        if video_info.get("url"):
-            return video_info["url"]
-
-        # Select best mp4 from formats list
-        formats = video_info.get("formats") or []
-        mp4_formats = [
-            f for f in formats
-            if f.get("ext") == "mp4" and f.get("url") and f.get("vcodec") != "none"
-        ]
-        if mp4_formats:
-            mp4_formats.sort(key=lambda f: f.get("height") or 0, reverse=True)
-            return mp4_formats[0]["url"]
-
+    if not os.path.exists(out_path) or os.path.getsize(out_path) == 0:
         return None
 
-    except Exception as exc:
-        print(f"[viral_video] video extract failed for {best_url}: {exc}")
-        return None
+    safe = handle.replace("/", "_")
+    return f"{_get_backend_url()}/social/video-file/{platform}/{safe}"
+
+
+# Keep the old name as an alias so main.py's background thread still works
+_get_viral_video_url = download_viral_video
+
+
+@router.get("/video-file/{platform}/{handle}")
+def serve_video_file(platform: str, handle: str):
+    """Serve a previously-downloaded viral video from local disk."""
+    path = _video_file_path(platform, handle)
+    if not os.path.exists(path) or os.path.getsize(path) == 0:
+        raise HTTPException(status_code=404, detail="Video not yet ready. Try again shortly.")
+    from fastapi.responses import FileResponse
+    return FileResponse(
+        path,
+        media_type="video/mp4",
+        headers={"Cache-Control": "public, max-age=7200", "Accept-Ranges": "bytes"},
+    )
 
 
 @router.get("/viral-video")
@@ -198,12 +222,10 @@ def get_viral_video(
     handle: str = Query(..., description="Username without @ prefix"),
 ):
     """
-    Detect the most viral (highest view count) video from a TikTok or Instagram profile.
-    Returns a direct signed CDN mp4 URL usable for 24–48 h (refresh via re-sync).
-
-    This call takes 5–20 s depending on platform response times.
-    The frontend calls this separately from /social/preview so the fast fields
-    (profile picture, followers) appear immediately while video detection runs.
+    Download the most viral video for a handle to local disk and return the
+    backend URL at which it will be served.  The video file is served from
+    /social/video-file/{platform}/{handle} — same domain as the API — so there
+    are no CORS issues when the browser loads it in a <video> tag.
     """
     handle = handle.strip().lstrip("@")
     if not handle:
@@ -211,13 +233,13 @@ def get_viral_video(
     if platform not in ("instagram", "tiktok"):
         raise HTTPException(status_code=400, detail="Platform must be 'instagram' or 'tiktok'.")
 
-    viral_video_url = _get_viral_video_url(platform, handle)
+    video_url = download_viral_video(platform, handle)
 
     return {
         "platform": platform,
         "handle": handle,
-        "viral_video_url": viral_video_url,
-        "detected": viral_video_url is not None,
+        "viral_video_url": video_url,
+        "detected": video_url is not None,
     }
 
 
@@ -253,65 +275,3 @@ def social_preview(
     }
 
 
-# TikTok CDN hostnames whose videos need to be proxied (CORS-blocked for cross-origin <video>)
-_PROXY_HOSTS = (
-    "tiktok.com",
-    "tiktokcdn.com",
-    "tiktokcdn-us.com",
-    "tiktokv.com",
-    "musical.ly",
-)
-
-
-@router.get("/video-proxy")
-def proxy_video(url: str = Query(...), request: Request = None):
-    """
-    Proxy a TikTok CDN video through this server to bypass CORS restrictions.
-
-    TikTok CDN URLs are signed and only allow requests with Referer: tiktok.com.
-    When the browser loads them directly from our domain the request is blocked and
-    the <video> element shows black.  This endpoint forwards the request to the CDN
-    with the correct headers and returns the video bytes with CORS headers set.
-
-    Supports HTTP Range requests so the browser can stream large videos in chunks
-    (each chunk is well under Vercel's function response-size limit).
-    """
-    parsed = urlparse(url)
-    if not any(parsed.netloc.endswith(h) for h in _PROXY_HOSTS):
-        raise HTTPException(status_code=400, detail="URL not from an allowed TikTok CDN host.")
-
-    upstream_headers = {
-        "User-Agent": (
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-        ),
-        "Referer": "https://www.tiktok.com/",
-        "Origin": "https://www.tiktok.com",
-    }
-    if request and request.headers.get("range"):
-        upstream_headers["Range"] = request.headers["range"]
-
-    try:
-        upstream = http_requests.get(url, headers=upstream_headers, stream=True, timeout=15)
-    except Exception as exc:
-        raise HTTPException(status_code=502, detail=str(exc))
-
-    response_headers = {
-        "Access-Control-Allow-Origin": "*",
-        "Cache-Control": "public, max-age=3600",
-    }
-    for header in ("Content-Length", "Content-Range", "Accept-Ranges", "Content-Type"):
-        if header in upstream.headers:
-            response_headers[header] = upstream.headers[header]
-
-    def _stream():
-        for chunk in upstream.iter_content(chunk_size=65536):
-            if chunk:
-                yield chunk
-
-    return StreamingResponse(
-        _stream(),
-        status_code=upstream.status_code,
-        headers=response_headers,
-        media_type=upstream.headers.get("Content-Type", "video/mp4"),
-    )
