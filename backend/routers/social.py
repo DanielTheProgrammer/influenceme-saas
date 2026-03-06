@@ -5,7 +5,9 @@ No authentication required — used during influencer onboarding.
 """
 import re
 import requests as http_requests
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
+from urllib.parse import urlparse
 from typing import Optional, List
 
 router = APIRouter(prefix="/social", tags=["social"])
@@ -249,3 +251,67 @@ def social_preview(
         "followers_count": followers_count,
         "followers_scraped": followers_count is not None,
     }
+
+
+# TikTok CDN hostnames whose videos need to be proxied (CORS-blocked for cross-origin <video>)
+_PROXY_HOSTS = (
+    "tiktok.com",
+    "tiktokcdn.com",
+    "tiktokcdn-us.com",
+    "tiktokv.com",
+    "musical.ly",
+)
+
+
+@router.get("/video-proxy")
+def proxy_video(url: str = Query(...), request: Request = None):
+    """
+    Proxy a TikTok CDN video through this server to bypass CORS restrictions.
+
+    TikTok CDN URLs are signed and only allow requests with Referer: tiktok.com.
+    When the browser loads them directly from our domain the request is blocked and
+    the <video> element shows black.  This endpoint forwards the request to the CDN
+    with the correct headers and returns the video bytes with CORS headers set.
+
+    Supports HTTP Range requests so the browser can stream large videos in chunks
+    (each chunk is well under Vercel's function response-size limit).
+    """
+    parsed = urlparse(url)
+    if not any(parsed.netloc.endswith(h) for h in _PROXY_HOSTS):
+        raise HTTPException(status_code=400, detail="URL not from an allowed TikTok CDN host.")
+
+    upstream_headers = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        ),
+        "Referer": "https://www.tiktok.com/",
+        "Origin": "https://www.tiktok.com",
+    }
+    if request and request.headers.get("range"):
+        upstream_headers["Range"] = request.headers["range"]
+
+    try:
+        upstream = http_requests.get(url, headers=upstream_headers, stream=True, timeout=15)
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=str(exc))
+
+    response_headers = {
+        "Access-Control-Allow-Origin": "*",
+        "Cache-Control": "public, max-age=3600",
+    }
+    for header in ("Content-Length", "Content-Range", "Accept-Ranges", "Content-Type"):
+        if header in upstream.headers:
+            response_headers[header] = upstream.headers[header]
+
+    def _stream():
+        for chunk in upstream.iter_content(chunk_size=65536):
+            if chunk:
+                yield chunk
+
+    return StreamingResponse(
+        _stream(),
+        status_code=upstream.status_code,
+        headers=response_headers,
+        media_type=upstream.headers.get("Content-Type", "video/mp4"),
+    )
