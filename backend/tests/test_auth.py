@@ -26,7 +26,7 @@ def test_register_influencer(client):
 
 
 def test_register_duplicate_email(client):
-    payload = {"email": "dup@example.com", "password": "pass123", "role": "fan"}
+    payload = {"email": "dup@example.com", "password": "pass1234", "role": "fan"}
     client.post("/auth/register", json=payload)
     res = client.post("/auth/register", json=payload)
     assert res.status_code == 400

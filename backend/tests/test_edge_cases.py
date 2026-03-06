@@ -89,10 +89,10 @@ def test_influencer_cannot_approve_another_influencers_request(client, influence
     """Register a second influencer and try to approve a request for the first one."""
     # Second influencer
     client.post("/auth/register", json={
-        "email": "second_inf@example.com", "password": "pass123", "role": "influencer"
+        "email": "second_inf@example.com", "password": "pass1234", "role": "influencer"
     })
     token2 = client.post("/token", data={
-        "username": "second_inf@example.com", "password": "pass123"
+        "username": "second_inf@example.com", "password": "pass1234"
     }).json()["access_token"]
     auth2 = {"Authorization": f"Bearer {token2}"}
 
@@ -137,10 +137,10 @@ def test_fan_cannot_view_influencer_requests(client, fan_token):
 def test_cannot_delete_another_influencers_service(client, influencer_token, fan_token):
     # Register second influencer
     client.post("/auth/register", json={
-        "email": "svc_intruder@example.com", "password": "pass123", "role": "influencer"
+        "email": "svc_intruder@example.com", "password": "pass1234", "role": "influencer"
     })
     token2 = client.post("/token", data={
-        "username": "svc_intruder@example.com", "password": "pass123"
+        "username": "svc_intruder@example.com", "password": "pass1234"
     }).json()["access_token"]
     auth2 = {"Authorization": f"Bearer {token2}"}
 
@@ -152,10 +152,10 @@ def test_cannot_delete_another_influencers_service(client, influencer_token, fan
 
 def test_service_requires_profile_first(client):
     client.post("/auth/register", json={
-        "email": "noprofile@example.com", "password": "pass123", "role": "influencer"
+        "email": "noprofile@example.com", "password": "pass1234", "role": "influencer"
     })
     token = client.post("/token", data={
-        "username": "noprofile@example.com", "password": "pass123"
+        "username": "noprofile@example.com", "password": "pass1234"
     }).json()["access_token"]
     auth = {"Authorization": f"Bearer {token}"}
 

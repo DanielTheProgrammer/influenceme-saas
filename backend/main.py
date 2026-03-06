@@ -5,9 +5,9 @@ from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from limiter import limiter
 from sqlalchemy.orm import Session
 from sqlalchemy.future import select
 from sqlalchemy import text
@@ -17,8 +17,6 @@ import os
 import threading
 
 load_dotenv()
-
-limiter = Limiter(key_func=get_remote_address)
 
 app = FastAPI(
     title="Influencer Engagement SaaS",

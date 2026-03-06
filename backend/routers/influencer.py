@@ -1,6 +1,7 @@
 import models, schemas, database, auth
+from limiter import limiter
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.future import select
 from pydantic import BaseModel
@@ -77,7 +78,9 @@ def get_my_engagement_requests(
 
 
 @router.post("/requests/{request_id}/approve", response_model=schemas.EngagementRequest)
+@limiter.limit("20/minute")
 def approve_engagement_request(
+    request: Request,
     request_id: int,
     current_user: models.User = Depends(auth.get_current_active_user),
     db: Session = db_dependency
@@ -93,7 +96,9 @@ def approve_engagement_request(
 
 
 @router.post("/requests/{request_id}/reject", response_model=schemas.EngagementRequest)
+@limiter.limit("20/minute")
 def reject_engagement_request(
+    request: Request,
     request_id: int,
     reject_data: schemas.RejectRequest,
     current_user: models.User = Depends(auth.get_current_active_user),
@@ -111,7 +116,9 @@ def reject_engagement_request(
 
 
 @router.post("/requests/{request_id}/counter-offer", response_model=schemas.EngagementRequest)
+@limiter.limit("20/minute")
 def counter_offer_engagement_request(
+    request: Request,
     request_id: int,
     counter_offer_data: schemas.CounterOfferRequest,
     current_user: models.User = Depends(auth.get_current_active_user),
@@ -130,7 +137,9 @@ def counter_offer_engagement_request(
 
 
 @router.post("/requests/{request_id}/fulfill", response_model=schemas.EngagementRequest)
+@limiter.limit("20/minute")
 def fulfill_engagement_request(
+    request: Request,
     request_id: int,
     fulfill_data: schemas.FulfillRequest,
     current_user: models.User = Depends(auth.get_current_active_user),
@@ -147,6 +156,50 @@ def fulfill_engagement_request(
     db.commit()
     db.refresh(db_request)
     return db_request
+
+
+# ─── Analytics ─────────────────────────────────────────────────────────────
+
+@router.get("/analytics")
+def get_analytics(
+    current_user: models.User = Depends(auth.get_current_active_user),
+    db: Session = db_dependency
+):
+    profile = _get_influencer_profile(current_user, db)
+    service_ids = db.execute(
+        select(models.EngagementService.id).filter(models.EngagementService.influencer_id == profile.id)
+    ).scalars().all()
+
+    reqs = db.execute(
+        select(models.EngagementRequest)
+        .filter(models.EngagementRequest.service_id.in_(service_ids))
+        .options(selectinload(models.EngagementRequest.service))
+    ).scalars().all() if service_ids else []
+
+    total = len(reqs)
+    by_status: dict = {}
+    for r in reqs:
+        key = r.status.value if hasattr(r.status, "value") else str(r.status)
+        by_status[key] = by_status.get(key, 0) + 1
+
+    platform_fee = float(os.getenv("PLATFORM_FEE_PERCENT", "20")) / 100
+    verified = [r for r in reqs if str(r.status) in ("verified", "RequestStatus.VERIFIED")]
+    gross = sum(r.service.price for r in verified if r.service)
+    net = gross * (1 - platform_fee)
+
+    return {
+        "total_requests": total,
+        "by_status": by_status,
+        "gross_earnings": round(gross, 2),
+        "net_earnings": round(net, 2),
+        "platform_fee_percent": int(platform_fee * 100),
+        "conversion_rate": round(len(verified) / total * 100, 1) if total > 0 else 0.0,
+        "pending_count": by_status.get("pending", 0),
+        "approved_count": by_status.get("approved", 0),
+        "fulfilled_count": by_status.get("fulfilled", 0),
+        "verified_count": len(verified),
+        "rejected_count": by_status.get("rejected", 0),
+    }
 
 
 # ─── Social Verification ───────────────────────────────────────────────────
