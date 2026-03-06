@@ -55,6 +55,7 @@ class InfluencerProfileBase(BaseModel):
     profile_picture_url: Optional[str] = None
     followers_count: Optional[int] = None
     recent_post_urls: Optional[List[str]] = None
+    viral_video_url: Optional[str] = None
 
 
 class InfluencerProfileCreate(InfluencerProfileBase):
@@ -89,6 +90,7 @@ class EngagementRequest(EngagementRequestBase):
     rejection_reason: Optional[str] = None
     counter_offer_price: Optional[float] = None
     counter_offer_description: Optional[str] = None
+    proof_url: Optional[str] = None
     service: Optional[EngagementService] = None
     model_config = ConfigDict(from_attributes=True)
 
@@ -107,4 +109,5 @@ class AcceptCounterOffer(BaseModel):
 
 
 class FulfillRequest(BaseModel):
+    proof_url: str
     final_image_url: Optional[str] = None

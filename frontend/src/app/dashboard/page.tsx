@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -137,15 +138,17 @@ export default function InfluencerDashboard() {
     // State for modals
     const [showCounterOfferForm, setShowCounterOfferForm] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState(false);
+    const [showFulfillModal, setShowFulfillModal] = useState(false);
     const [currentRequestId, setCurrentRequestId] = useState<number | null>(null);
     const [newCounterPrice, setNewCounterPrice] = useState("");
     const [newCounterDescription, setNewCounterDescription] = useState("");
     const [rejectionReason, setRejectionReason] = useState("");
+    const [proofUrl, setProofUrl] = useState("");
 
     const handleAction = async (
         id: number,
         action: "approved" | "rejected" | "counter_offered" | "fulfilled",
-        payload?: { price?: number; description?: string; reason?: string; finalUrl?: string }
+        payload?: { price?: number; description?: string; reason?: string; finalUrl?: string; proofUrl?: string }
     ) => {
         let endpoint = "";
         let body: any = {};
@@ -164,7 +167,7 @@ export default function InfluencerDashboard() {
                 break;
             case "fulfilled":
                 endpoint = `/influencer/requests/${id}/fulfill`;
-                body = { final_image_url: payload?.finalUrl || null };
+                body = { proof_url: payload?.proofUrl || "", final_image_url: payload?.finalUrl || null };
                 break;
             default:
                 return;
@@ -213,6 +216,20 @@ export default function InfluencerDashboard() {
         if (currentRequestId !== null && rejectionReason) {
             handleAction(currentRequestId, "rejected", { reason: rejectionReason });
             setShowRejectModal(false);
+            setCurrentRequestId(null);
+        }
+    };
+
+    const openFulfillModal = (requestId: number) => {
+        setCurrentRequestId(requestId);
+        setProofUrl("");
+        setShowFulfillModal(true);
+    };
+
+    const submitFulfill = () => {
+        if (currentRequestId !== null && proofUrl.trim()) {
+            handleAction(currentRequestId, "fulfilled", { proofUrl: proofUrl.trim() });
+            setShowFulfillModal(false);
             setCurrentRequestId(null);
         }
     };
@@ -388,7 +405,7 @@ export default function InfluencerDashboard() {
                                 {/* Preview Image */}
                                 <div className="w-32 h-32 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center border">
                                     {request.generated_image_preview_url ? (
-                                        <img src={request.generated_image_preview_url} alt="Preview" className="w-full h-full object-cover" />
+                                        <Image src={request.generated_image_preview_url} alt="Preview" width={128} height={128} className="w-full h-full object-cover" unoptimized />
                                     ) : (
                                         <span className="text-gray-400 text-sm">No Image</span>
                                     )}
@@ -457,8 +474,8 @@ export default function InfluencerDashboard() {
                                     <div className="flex flex-col gap-2 w-full md:w-auto">
                                         <p className="text-green-700 text-sm font-medium text-center">Ready to fulfill</p>
                                         <button
-                                            onClick={() => handleAction(request.id, "fulfilled")}
-                                            className="px-6 py-2 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-700 transition-colors"
+                                            onClick={() => openFulfillModal(request.id)}
+                                            className="px-6 py-2 bg-violet-600 text-white font-bold rounded-lg hover:bg-violet-700 transition-colors"
                                         >
                                             Mark as Fulfilled
                                         </button>
@@ -495,6 +512,44 @@ export default function InfluencerDashboard() {
                                 className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors"
                             >
                                 Reject Request
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Fulfill Modal */}
+            {showFulfillModal && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+                        <h2 className="text-2xl font-bold mb-2">Mark as Fulfilled</h2>
+                        <p className="text-gray-600 mb-4 text-sm">
+                            Provide a link to proof of fulfillment (screenshot, post URL, story URL). The fan will review this before releasing payment.
+                        </p>
+                        <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-700 mb-1">Proof URL *</label>
+                            <input
+                                type="url"
+                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-violet-500 outline-none"
+                                value={proofUrl}
+                                onChange={(e) => setProofUrl(e.target.value)}
+                                placeholder="https://www.instagram.com/p/... or screenshot link"
+                            />
+                            <p className="text-xs text-gray-400 mt-1">Link to the post, story, or screenshot showing you completed the engagement.</p>
+                        </div>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                onClick={() => setShowFulfillModal(false)}
+                                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={submitFulfill}
+                                disabled={!proofUrl.trim()}
+                                className="px-4 py-2 bg-violet-600 text-white rounded-lg font-bold hover:bg-violet-700 transition-colors disabled:opacity-50"
+                            >
+                                Submit Proof & Fulfill
                             </button>
                         </div>
                     </div>

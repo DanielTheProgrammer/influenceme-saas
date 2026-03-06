@@ -8,8 +8,12 @@ import Link from "next/link";
 function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const redirectTo = searchParams.get("redirect") || "/dashboard";
     const registered = searchParams.get("registered") === "1";
+    const regRole = searchParams.get("role");
+    // After fresh registration, redirect to onboarding; otherwise to requested page or dashboard
+    const redirectTo = registered
+        ? (regRole === "influencer" ? "/onboarding/influencer" : "/onboarding/fan")
+        : (searchParams.get("redirect") || "/dashboard");
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");

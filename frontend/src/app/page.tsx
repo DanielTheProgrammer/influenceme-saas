@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useEffect, useState } from "react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -144,10 +145,13 @@ export default function HomePage() {
                                         className="group bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-200 text-center border border-transparent hover:border-violet-200"
                                     >
                                         <div className="relative mx-auto w-16 h-16 mb-3">
-                                            <img
+                                            <Image
                                                 src={inf.profile_picture_url!}
                                                 alt={inf.display_name}
+                                                width={64}
+                                                height={64}
                                                 className="w-16 h-16 rounded-full object-cover border-2 border-violet-100 group-hover:border-violet-400 transition-colors"
+                                                unoptimized
                                             />
                                         </div>
                                         <p className="font-bold text-sm text-gray-900 truncate leading-tight">{inf.display_name}</p>
@@ -309,7 +313,7 @@ export default function HomePage() {
                                 </div>
                                 <p className="text-gray-700 text-sm leading-relaxed mb-5 italic">&ldquo;{t.quote}&rdquo;</p>
                                 <div className="flex items-center gap-3">
-                                    <img src={t.avatar} alt={t.name} className="w-9 h-9 rounded-full object-cover" />
+                                    <Image src={t.avatar} alt={t.name} width={36} height={36} className="w-9 h-9 rounded-full object-cover" unoptimized />
                                     <div>
                                         <p className="text-sm font-bold text-gray-900">{t.name}</p>
                                         <p className="text-xs text-gray-400">{t.role}</p>

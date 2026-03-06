@@ -11,12 +11,13 @@ db_dependency = Depends(database.get_db)
 
 
 @router.get("/influencers", response_model=List[schemas.InfluencerProfile])
-def get_all_influencers(db: Session = db_dependency):
+def get_all_influencers(limit: int = 50, db: Session = db_dependency):
     result = db.execute(
         select(models.InfluencerProfile)
         .options(selectinload(models.InfluencerProfile.services))
         .join(models.User)
         .filter(models.User.is_active == True)
+        .limit(limit)
     )
     return result.scalars().all()
 
@@ -79,6 +80,30 @@ def get_my_fan_requests(
         .order_by(models.EngagementRequest.created_at.desc())
     )
     return result.scalars().all()
+
+
+@router.post("/requests/{request_id}/cancel", response_model=schemas.EngagementRequest)
+def cancel_request(
+    request_id: int,
+    db: Session = db_dependency,
+    current_user: models.User = Depends(auth.get_current_active_user)
+):
+    if current_user.role != models.UserRole.FAN:
+        raise HTTPException(status_code=403, detail="Only fans can cancel requests.")
+    db_request = db.execute(
+        select(models.EngagementRequest).filter(
+            models.EngagementRequest.id == request_id,
+            models.EngagementRequest.fan_id == current_user.id
+        )
+    ).scalars().first()
+    if not db_request:
+        raise HTTPException(status_code=404, detail="Request not found.")
+    if db_request.status not in [models.RequestStatus.PENDING, models.RequestStatus.COUNTER_OFFERED]:
+        raise HTTPException(status_code=400, detail="Can only cancel pending or counter-offered requests.")
+    db_request.status = models.RequestStatus.CANCELLED
+    db.commit()
+    db.refresh(db_request)
+    return db_request
 
 
 @router.post("/requests/{request_id}/accept-counter-offer", response_model=schemas.EngagementRequest)

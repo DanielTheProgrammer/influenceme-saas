@@ -53,6 +53,7 @@ class InfluencerProfile(Base):
     # Audience & content
     followers_count = Column(Integer, nullable=True)
     recent_post_urls = Column(JSON, nullable=True)  # List[str] of image URLs
+    viral_video_url = Column(String, nullable=True)  # TikTok/Instagram video URL for card background
 
     # Social verification
     verification_code = Column(String, nullable=True)
@@ -111,6 +112,7 @@ class EngagementRequest(Base):
     payment_intent_id = Column(String) # From Stripe
     generated_image_preview_url = Column(String) # Watermarked
     generated_image_final_url = Column(String) # Un-watermarked, for influencer
+    proof_url = Column(String, nullable=True)  # URL to fulfillment proof (post/story/screenshot)
     rejection_reason = Column(String, nullable=True)
     counter_offer_price = Column(Float, nullable=True)
     counter_offer_description = Column(String, nullable=True)

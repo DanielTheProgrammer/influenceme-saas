@@ -60,6 +60,7 @@ def test_influencer_full_flow(client, influencer_token, fan_token):
     assert approve_res.json()["status"] == "approved"
 
     fulfill_res = client.post(f"/influencer/requests/{request_id}/fulfill", headers=auth_inf, json={
+        "proof_url": "https://www.instagram.com/p/test123/",
         "final_image_url": "https://example.com/final.jpg",
     })
     assert fulfill_res.status_code == 200

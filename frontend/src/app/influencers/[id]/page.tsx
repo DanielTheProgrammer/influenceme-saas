@@ -3,6 +3,7 @@
 import { useState, useEffect, use } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import GenAIStudio from "@/components/GenAIStudio";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -147,10 +148,13 @@ export default function InfluencerProfilePage({ params }: { params: Promise<{ id
                 {/* Avatar + Name Row */}
                 <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-14 mb-6">
                     <div className="relative flex-shrink-0">
-                        <img
+                        <Image
                             src={influencer.profile_picture_url || `https://i.pravatar.cc/200?u=${influencer.id}`}
                             alt={influencer.display_name}
+                            width={112}
+                            height={112}
                             className="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover"
+                            unoptimized
                         />
                         {isVerified && (
                             <div className="absolute bottom-1 right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white shadow" title="Verified">
@@ -259,10 +263,12 @@ export default function InfluencerProfilePage({ params }: { params: Promise<{ id
                     <div className="grid grid-cols-3 gap-2">
                         {posts.map((url, i) => (
                             <div key={i} className="aspect-square rounded-xl overflow-hidden bg-gray-100 group relative">
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                     src={url}
                                     alt={`Post ${i + 1}`}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    loading="lazy"
                                     onError={(e) => {
                                         (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${influencer.id + i}/400/400`;
                                     }}

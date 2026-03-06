@@ -141,6 +141,7 @@ def fulfill_engagement_request(
     if db_request.status != models.RequestStatus.APPROVED:
         raise HTTPException(status_code=400, detail=f"Request is in {db_request.status} state, not APPROVED.")
     db_request.status = models.RequestStatus.FULFILLED
+    db_request.proof_url = fulfill_data.proof_url
     if fulfill_data.final_image_url:
         db_request.generated_image_final_url = fulfill_data.final_image_url
     db.commit()

@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
@@ -17,6 +18,7 @@ interface EngagementRequest {
     rejection_reason: string | null;
     counter_offer_price: number | null;
     counter_offer_description: string | null;
+    proof_url: string | null;
     service: {
         id: number;
         engagement_type: string;
@@ -80,6 +82,20 @@ export default function FanRequestsPage() {
         }
     };
 
+    const handleCancel = async (requestId: number) => {
+        try {
+            const res = await fetch(`${API_URL}/marketplace/requests/${requestId}/cancel`, {
+                method: "POST",
+                headers: { Authorization: `Bearer ${token}` },
+            });
+            if (!res.ok) throw new Error("Cancel failed.");
+            await fetchRequests();
+            toast.success("Request cancelled.");
+        } catch (err: any) {
+            toast.error(err.message);
+        }
+    };
+
     const handleVerify = async (requestId: number) => {
         try {
             const res = await fetch(`${API_URL}/marketplace/requests/${requestId}/verify`, {
@@ -127,10 +143,13 @@ export default function FanRequestsPage() {
                     {requests.map((req) => (
                         <div key={req.id} className="bg-white rounded-xl shadow-sm p-6 flex flex-col md:flex-row gap-4">
                             {req.generated_image_preview_url && (
-                                <img
+                                <Image
                                     src={req.generated_image_preview_url}
                                     alt="Preview"
+                                    width={96}
+                                    height={96}
                                     className="w-24 h-24 rounded-lg object-cover flex-shrink-0"
+                                    unoptimized
                                 />
                             )}
                             <div className="flex-1">
@@ -184,13 +203,39 @@ export default function FanRequestsPage() {
                                 )}
 
                                 {req.status === "fulfilled" && (
-                                    <div className="flex items-center gap-3 mt-2">
-                                        <p className="text-blue-700 text-sm">The influencer has fulfilled this request!</p>
+                                    <div className="bg-violet-50 rounded-lg p-3 mt-2 border border-violet-100">
+                                        <p className="text-violet-800 text-sm font-medium mb-2">The influencer has fulfilled this request!</p>
+                                        {req.proof_url && (
+                                            <div className="mb-3">
+                                                <a
+                                                    href={req.proof_url}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="inline-flex items-center gap-1.5 text-violet-600 hover:text-violet-800 text-sm font-medium hover:underline"
+                                                >
+                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                                    </svg>
+                                                    View Proof of Fulfillment
+                                                </a>
+                                            </div>
+                                        )}
                                         <button
                                             onClick={() => handleVerify(req.id)}
-                                            className="px-4 py-1.5 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700"
+                                            className="px-4 py-1.5 bg-violet-600 text-white text-sm font-medium rounded-lg hover:bg-violet-700"
                                         >
                                             Confirm & Release Payment
+                                        </button>
+                                    </div>
+                                )}
+
+                                {(req.status === "pending" || req.status === "counter_offered") && (
+                                    <div className="mt-2">
+                                        <button
+                                            onClick={() => handleCancel(req.id)}
+                                            className="px-3 py-1 text-xs text-gray-500 hover:text-rose-600 border border-gray-200 hover:border-rose-300 rounded-lg transition-colors"
+                                        >
+                                            Cancel Request
                                         </button>
                                     </div>
                                 )}

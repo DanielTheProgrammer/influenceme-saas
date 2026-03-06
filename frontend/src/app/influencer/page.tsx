@@ -54,6 +54,7 @@ export default function InfluencerOnboarding() {
     const [profilePicUrl, setProfilePicUrl] = useState("");
     const [followersCount, setFollowersCount] = useState("");
     const [recentPostUrls, setRecentPostUrls] = useState<string[]>(["", "", "", "", "", ""]);
+    const [viralVideoUrl, setViralVideoUrl] = useState("");
 
     const [syncing, setSyncing] = useState<"instagram" | "tiktok" | null>(null);
 
@@ -83,6 +84,7 @@ export default function InfluencerOnboarding() {
                     setTiktokHandle(data.tiktok_handle || "");
                     setProfilePicUrl(data.profile_picture_url || "");
                     setFollowersCount(data.followers_count?.toString() || "");
+                    setViralVideoUrl(data.viral_video_url || "");
                     if (data.recent_post_urls) {
                         const padded = [...data.recent_post_urls, "", "", "", "", "", ""].slice(0, 6);
                         setRecentPostUrls(padded);
@@ -135,6 +137,7 @@ export default function InfluencerOnboarding() {
                     profile_picture_url: profilePicUrl || null,
                     followers_count: followersCount ? parseInt(followersCount) : null,
                     recent_post_urls: recentPostUrls.filter(u => u.trim() !== "") || null,
+                    viral_video_url: viralVideoUrl || null,
                 }),
             });
             if (!res.ok) throw new Error("Failed to save profile.");
@@ -354,6 +357,20 @@ export default function InfluencerOnboarding() {
                             ))}
                         </div>
                         <p className="text-xs text-gray-400 mt-2">Paste direct image URLs from your Instagram/TikTok posts.</p>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                            Viral Video URL
+                            <span className="ml-1 font-normal text-gray-400 text-xs">(optional — shown as card background in marketplace)</span>
+                        </label>
+                        <input
+                            type="url"
+                            value={viralVideoUrl}
+                            onChange={e => setViralVideoUrl(e.target.value)}
+                            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-violet-500 outline-none text-sm"
+                            placeholder="https://www.tiktok.com/@yourhandle/video/... (direct video URL)"
+                        />
+                        <p className="text-xs text-gray-400 mt-1">Paste a direct .mp4 video URL. This plays silently behind your card in the marketplace.</p>
                     </div>
                     <button
                         type="submit"

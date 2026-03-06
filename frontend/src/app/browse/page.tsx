@@ -16,6 +16,16 @@ const ENGAGEMENT_TYPES = [
     { value: "comment", label: "Comment" },
 ];
 
+const CATEGORY_PILLS = [
+    { label: "All", value: "" },
+    { label: "Story Tag", value: "story_tag" },
+    { label: "Shoutout", value: "post_tag" },
+    { label: "Follow", value: "permanent_follow" },
+    { label: "Comment", value: "comment" },
+    { label: "Highlight", value: "story_highlight" },
+    { label: "Timed", value: "timed_follow" },
+];
+
 export default function BrowsePage() {
     const [influencers, setInfluencers] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
@@ -77,6 +87,23 @@ export default function BrowsePage() {
             </div>
 
             <div className="max-w-6xl mx-auto px-4 py-8">
+                {/* Category pills */}
+                <div className="flex flex-wrap gap-2 mb-5">
+                    {CATEGORY_PILLS.map((pill) => (
+                        <button
+                            key={pill.value}
+                            onClick={() => setFilterType(pill.value)}
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                                filterType === pill.value
+                                    ? "bg-violet-600 text-white shadow-sm"
+                                    : "bg-white text-gray-600 border border-gray-200 hover:border-violet-300 hover:text-violet-600"
+                            }`}
+                        >
+                            {pill.label}
+                        </button>
+                    ))}
+                </div>
+
                 {/* Filters */}
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-8 flex flex-col md:flex-row gap-3">
                     <div className="relative flex-1">

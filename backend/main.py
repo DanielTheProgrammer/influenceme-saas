@@ -1,5 +1,5 @@
 import models, schemas, database, auth
-from routers import marketplace, genai, influencer, influencers, dashboard, payments, social
+from routers import marketplace, genai, influencer, influencers, dashboard, payments, social, admin
 
 from fastapi import FastAPI, Depends, HTTPException, Request, status
 from fastapi.security import OAuth2PasswordRequestForm
@@ -53,6 +53,8 @@ def on_startup():
             "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS tiktok_verification_status VARCHAR DEFAULT 'unverified'",
             "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS followers_count INTEGER",
             "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS recent_post_urls TEXT",
+            "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS viral_video_url VARCHAR",
+            "ALTER TABLE engagement_requests ADD COLUMN IF NOT EXISTS proof_url VARCHAR",
         ]
         try:
             with database.engine.connect() as conn:
@@ -130,3 +132,4 @@ app.include_router(influencers.router)
 app.include_router(dashboard.router)
 app.include_router(payments.router)
 app.include_router(social.router)
+app.include_router(admin.router)

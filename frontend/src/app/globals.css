@@ -3,6 +3,14 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* Brand colors */
+  --brand-primary: #7C3AED;      /* violet-600 */
+  --brand-primary-dark: #6D28D9; /* violet-700 */
+  --brand-accent: #F43F5E;       /* rose-500 */
+  --brand-accent-dark: #E11D48;  /* rose-600 */
+  --brand-dark: #030712;         /* gray-950 */
+  --brand-dark-2: #111827;       /* gray-900 */
 }
 
 @theme inline {
@@ -12,15 +20,13 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
 }

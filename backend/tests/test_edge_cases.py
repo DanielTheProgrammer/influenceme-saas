@@ -53,7 +53,7 @@ def test_cannot_fulfill_pending_request(client, influencer_token, fan_token):
 
     req_id = client.post("/marketplace/requests", headers=auth_fan, json={"service_id": svc_id}).json()["id"]
 
-    res = client.post(f"/influencer/requests/{req_id}/fulfill", headers=auth_inf, json={"final_image_url": None})
+    res = client.post(f"/influencer/requests/{req_id}/fulfill", headers=auth_inf, json={"proof_url": "https://example.com/proof", "final_image_url": None})
     assert res.status_code == 400
 
 
