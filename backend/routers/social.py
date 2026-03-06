@@ -6,7 +6,7 @@ No authentication required — used during influencer onboarding.
 import re
 import requests as http_requests
 from fastapi import APIRouter, HTTPException, Query
-from typing import Optional
+from typing import Optional, List
 
 router = APIRouter(prefix="/social", tags=["social"])
 
@@ -96,6 +96,127 @@ def _scrape_followers(platform: str, handle: str) -> Optional[int]:
             return _parse_followers(m.group(1))
 
     return None
+
+
+def _get_viral_video_url(platform: str, handle: str) -> Optional[str]:
+    """
+    Use yt-dlp to extract the most-viewed video CDN URL from a TikTok or Instagram profile.
+
+    Strategy:
+      1. Flat-extract the profile playlist to get video IDs + view counts (fast, 1 request).
+      2. Sort by view_count, pick the top video.
+      3. Full-extract just that one video to obtain the signed CDN mp4 URL.
+
+    Notes:
+      - TikTok CDN URLs are signed and expire in ~24h; refresh via re-sync.
+      - Returns None on any failure so callers can degrade gracefully.
+      - Requires yt-dlp in requirements.txt.
+    """
+    try:
+        import yt_dlp  # lazy import — not available in all envs
+    except ImportError:
+        print("[viral_video] yt-dlp not installed")
+        return None
+
+    handle = handle.strip().lstrip("@")
+
+    if platform == "tiktok":
+        profile_url = f"https://www.tiktok.com/@{handle}"
+    elif platform == "instagram":
+        # Reels endpoint returns more videos than the main profile page
+        profile_url = f"https://www.instagram.com/{handle}/reels/"
+    else:
+        return None
+
+    # ── Step 1: flat extraction — quick, gets view counts ──────────────────
+    try:
+        flat_opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "skip_download": True,
+            "extract_flat": True,
+            "playlistend": 15,
+        }
+        with yt_dlp.YoutubeDL(flat_opts) as ydl:
+            flat_info = ydl.extract_info(profile_url, download=False)
+
+        if not flat_info or not flat_info.get("entries"):
+            return None
+
+        entries: List[dict] = [e for e in flat_info["entries"] if e and e.get("url")]
+        if not entries:
+            return None
+
+        # Sort by view count — TikTok includes this in flat info
+        entries.sort(key=lambda e: e.get("view_count") or 0, reverse=True)
+        best_url = entries[0]["url"]
+
+    except Exception as exc:
+        print(f"[viral_video] flat extract failed for {platform}/{handle}: {exc}")
+        return None
+
+    # ── Step 2: full extraction for the top video → CDN mp4 URL ───────────
+    try:
+        video_opts = {
+            "quiet": True,
+            "no_warnings": True,
+            "skip_download": True,
+            "format": "mp4/best[ext=mp4]/best",
+        }
+        with yt_dlp.YoutubeDL(video_opts) as ydl:
+            video_info = ydl.extract_info(best_url, download=False)
+
+        if not video_info:
+            return None
+
+        # Direct URL shortcut (some extractors set this at top level)
+        if video_info.get("url"):
+            return video_info["url"]
+
+        # Select best mp4 from formats list
+        formats = video_info.get("formats") or []
+        mp4_formats = [
+            f for f in formats
+            if f.get("ext") == "mp4" and f.get("url") and f.get("vcodec") != "none"
+        ]
+        if mp4_formats:
+            mp4_formats.sort(key=lambda f: f.get("height") or 0, reverse=True)
+            return mp4_formats[0]["url"]
+
+        return None
+
+    except Exception as exc:
+        print(f"[viral_video] video extract failed for {best_url}: {exc}")
+        return None
+
+
+@router.get("/viral-video")
+def get_viral_video(
+    platform: str = Query(..., description="instagram or tiktok"),
+    handle: str = Query(..., description="Username without @ prefix"),
+):
+    """
+    Detect the most viral (highest view count) video from a TikTok or Instagram profile.
+    Returns a direct signed CDN mp4 URL usable for 24–48 h (refresh via re-sync).
+
+    This call takes 5–20 s depending on platform response times.
+    The frontend calls this separately from /social/preview so the fast fields
+    (profile picture, followers) appear immediately while video detection runs.
+    """
+    handle = handle.strip().lstrip("@")
+    if not handle:
+        raise HTTPException(status_code=400, detail="Handle cannot be empty.")
+    if platform not in ("instagram", "tiktok"):
+        raise HTTPException(status_code=400, detail="Platform must be 'instagram' or 'tiktok'.")
+
+    viral_video_url = _get_viral_video_url(platform, handle)
+
+    return {
+        "platform": platform,
+        "handle": handle,
+        "viral_video_url": viral_video_url,
+        "detected": viral_video_url is not None,
+    }
 
 
 @router.get("/preview")

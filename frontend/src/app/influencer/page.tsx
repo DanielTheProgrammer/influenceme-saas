@@ -57,6 +57,7 @@ export default function InfluencerOnboarding() {
     const [viralVideoUrl, setViralVideoUrl] = useState("");
 
     const [syncing, setSyncing] = useState<"instagram" | "tiktok" | null>(null);
+    const [detectingVideo, setDetectingVideo] = useState(false);
 
     // New service form state
     const [showServiceForm, setShowServiceForm] = useState(false);
@@ -103,6 +104,7 @@ export default function InfluencerOnboarding() {
         }
         setSyncing(platform);
         try {
+            // ── Fast: profile picture + followers ──────────────────────────
             const res = await fetch(`${API_URL}/social/preview?platform=${platform}&handle=${encodeURIComponent(handle)}`);
             if (!res.ok) throw new Error("Could not fetch profile data.");
             const data = await res.json();
@@ -113,10 +115,28 @@ export default function InfluencerOnboarding() {
             } else {
                 toast.success("Profile picture synced! Please enter your follower count manually.");
             }
+            setSyncing(null);
+
+            // ── Slow (background): detect most viral video ─────────────────
+            setDetectingVideo(true);
+            const videoRes = await fetch(
+                `${API_URL}/social/viral-video?platform=${platform}&handle=${encodeURIComponent(handle)}`
+            );
+            if (videoRes.ok) {
+                const videoData = await videoRes.json();
+                if (videoData.detected && videoData.viral_video_url) {
+                    setViralVideoUrl(videoData.viral_video_url);
+                    toast.success("Most viral video detected and filled in!");
+                } else {
+                    toast("Could not auto-detect viral video — paste the mp4 URL manually.", { icon: "ℹ️" });
+                }
+            }
         } catch (err: any) {
             toast.error(err.message || "Sync failed.");
+            setSyncing(null);
         } finally {
             setSyncing(null);
+            setDetectingVideo(false);
         }
     };
 
@@ -359,18 +379,30 @@ export default function InfluencerOnboarding() {
                         <p className="text-xs text-gray-400 mt-2">Paste direct image URLs from your Instagram/TikTok posts.</p>
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
+                        <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center gap-2">
                             Viral Video URL
-                            <span className="ml-1 font-normal text-gray-400 text-xs">(optional — shown as card background in marketplace)</span>
+                            <span className="font-normal text-gray-400 text-xs">(auto-detected on Sync — shown as card background)</span>
+                            {detectingVideo && (
+                                <span className="flex items-center gap-1 text-violet-600 text-xs font-medium">
+                                    <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                    </svg>
+                                    Detecting most viral video…
+                                </span>
+                            )}
                         </label>
                         <input
                             type="url"
                             value={viralVideoUrl}
                             onChange={e => setViralVideoUrl(e.target.value)}
-                            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-violet-500 outline-none text-sm"
-                            placeholder="https://www.tiktok.com/@yourhandle/video/... (direct video URL)"
+                            disabled={detectingVideo}
+                            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-violet-500 outline-none text-sm disabled:bg-gray-50 disabled:text-gray-400"
+                            placeholder={detectingVideo ? "Detecting…" : "Auto-filled on Sync, or paste a direct .mp4 URL"}
                         />
-                        <p className="text-xs text-gray-400 mt-1">Paste a direct .mp4 video URL. This plays silently behind your card in the marketplace.</p>
+                        <p className="text-xs text-gray-400 mt-1">
+                            Click Sync above to auto-detect your most viral TikTok/Instagram video. URL expires in ~24h — re-sync to refresh.
+                        </p>
                     </div>
                     <button
                         type="submit"
