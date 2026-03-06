@@ -45,24 +45,55 @@ def on_startup():
     except Exception as e:
         print(f"[startup] WARNING: Could not create tables: {e}")
 
-    # Run incremental column migrations — PostgreSQL only (SQLite gets fresh tables via create_all)
-    if database.DATABASE_URL.startswith("postgresql"):
-        _migrations = [
-            "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS verification_code VARCHAR",
-            "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS instagram_verification_status VARCHAR DEFAULT 'unverified'",
-            "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS tiktok_verification_status VARCHAR DEFAULT 'unverified'",
-            "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS followers_count INTEGER",
-            "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS recent_post_urls TEXT",
-            "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS viral_video_url VARCHAR",
-            "ALTER TABLE engagement_requests ADD COLUMN IF NOT EXISTS proof_url VARCHAR",
-        ]
-        try:
-            with database.engine.connect() as conn:
-                for sql in _migrations:
+    # Demo video URLs for seeded influencers (free CDN mp4s used as placeholders)
+    _demo_videos = [
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4",
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4",
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4",
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4",
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/VolkswagenGTIReview.mp4",
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4",
+        "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/WhatCarCanYouGetForAGrand.mp4",
+    ]
+
+    # Incremental column migrations — run for ALL db types, ignore errors per statement
+    # (PostgreSQL uses IF NOT EXISTS; SQLite silently ignores duplicate adds via try/except)
+    _col_migrations = [
+        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS verification_code VARCHAR",
+        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS instagram_verification_status VARCHAR DEFAULT 'unverified'",
+        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS tiktok_verification_status VARCHAR DEFAULT 'unverified'",
+        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS followers_count INTEGER",
+        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS recent_post_urls TEXT",
+        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS viral_video_url VARCHAR",
+        "ALTER TABLE engagement_requests ADD COLUMN IF NOT EXISTS proof_url VARCHAR",
+    ]
+
+    # Data migration: give demo video URLs to seeded influencers that have none yet
+    _data_migrations = [
+        f"""UPDATE influencer_profiles SET viral_video_url =
+            CASE (id % {len(_demo_videos)})
+                {" ".join(f"WHEN {i} THEN '{url}'" for i, url in enumerate(_demo_videos))}
+                ELSE '{_demo_videos[0]}'
+            END
+            WHERE viral_video_url IS NULL"""
+    ]
+
+    try:
+        with database.engine.connect() as conn:
+            for sql in _col_migrations:
+                try:
                     conn.execute(text(sql))
-                conn.commit()
-        except Exception as e:
-            print(f"[startup] WARNING: Migration failed: {e}")
+                except Exception as col_err:
+                    print(f"[startup] Column migration skipped (likely exists): {col_err}")
+            for sql in _data_migrations:
+                try:
+                    conn.execute(text(sql))
+                except Exception as data_err:
+                    print(f"[startup] Data migration failed: {data_err}")
+            conn.commit()
+    except Exception as e:
+        print(f"[startup] WARNING: Migration block failed: {e}")
 
 
 @app.get("/")
