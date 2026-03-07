@@ -55,6 +55,25 @@ body {
   animation: marquee 30s linear infinite;
 }
 
+/* ─── Phone demo animations ──────────────────────────────── */
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slide-up {
+  animation: slideInUp 0.35s cubic-bezier(0.34, 1.2, 0.64, 1) forwards;
+}
+
+@keyframes notifyIn {
+  0%   { opacity: 0; transform: translateY(-100%); }
+  12%  { opacity: 1; transform: translateY(0); }
+  78%  { opacity: 1; transform: translateY(0); }
+  100% { opacity: 0; transform: translateY(-100%); }
+}
+.animate-notify {
+  animation: notifyIn 3.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 /* ─── Ambient glow blobs ─────────────────────────────────── */
 .glow-amber {
   box-shadow: 0 0 60px rgba(240, 165, 0, 0.18), 0 0 120px rgba(240, 165, 0, 0.06);

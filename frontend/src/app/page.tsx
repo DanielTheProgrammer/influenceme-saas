@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import PhoneDemo from "@/components/PhoneDemo";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -105,64 +106,76 @@ export default function HomePage() {
                     </span>
                 </div>
 
-                <div className="relative max-w-6xl mx-auto px-5 pt-20 pb-24 text-center">
-                    {/* Badge */}
-                    <div className="inline-flex items-center gap-2 border border-lk-border-bright bg-lk-surface/70 backdrop-blur-sm rounded-full px-4 py-1.5 text-[11px] font-semibold tracking-[0.16em] text-lk-muted-bright uppercase mb-10">
-                        <span className="w-1.5 h-1.5 rounded-full bg-lk-cyan animate-pulse" />
-                        Social Proof Marketplace
-                    </div>
+                <div className="relative max-w-6xl mx-auto px-5 pt-16 pb-20">
+                    <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
 
-                    {/* Headline */}
-                    <h1
-                        className="font-black leading-[0.88] tracking-[-0.04em] mb-8"
-                        style={{ fontFamily: "var(--font-syne)", fontSize: "clamp(3rem, 10vw, 7rem)" }}
-                    >
-                        <span className="text-lk-white block">Buy the story.</span>
-                        <span className="text-lk-amber block">Own the narrative.</span>
-                    </h1>
-
-                    {/* Sub */}
-                    <p className="text-lk-muted-bright text-xl md:text-2xl mb-3 max-w-xl mx-auto">
-                        Make them wonder who you&apos;re with.
-                    </p>
-                    <p className="text-lk-muted text-sm md:text-base mb-12 max-w-2xl mx-auto leading-relaxed">
-                        Get tagged, featured, and validated by attractive, successful people.
-                        Engineered social proof. Real results. Your network will notice.
-                    </p>
-
-                    {/* CTAs */}
-                    <div className="flex flex-col sm:flex-row gap-3 justify-center mb-20">
-                        <Link
-                            href="/browse"
-                            className="px-8 py-4 bg-lk-amber text-lk-black font-bold rounded-full text-base tracking-wide hover:brightness-110 transition-all shadow-lg hover:shadow-lk-amber/20 hover:-translate-y-0.5"
-                        >
-                            Explore Creators →
-                        </Link>
-                        <Link
-                            href="/register"
-                            className="px-8 py-4 border border-lk-border-bright text-lk-white font-semibold rounded-full text-base tracking-wide hover:border-lk-muted-bright hover:bg-lk-surface transition-all"
-                        >
-                            Earn as a Model
-                        </Link>
-                    </div>
-
-                    {/* Stats */}
-                    <div className="inline-flex flex-wrap gap-8 md:gap-14 justify-center border border-lk-border rounded-2xl bg-lk-surface/50 backdrop-blur-sm px-8 py-5">
-                        {[
-                            { v: "250K+", l: "Models & Influencers" },
-                            { v: "4.8M+", l: "Proof Moments Delivered" },
-                            { v: "96%", l: "Satisfaction Rate" },
-                        ].map((s) => (
-                            <div key={s.l} className="text-center">
-                                <div
-                                    className="text-2xl md:text-3xl font-extrabold text-lk-white"
-                                    style={{ fontFamily: "var(--font-syne)" }}
-                                >
-                                    {s.v}
-                                </div>
-                                <div className="text-[11px] text-lk-muted mt-1 tracking-wide uppercase">{s.l}</div>
+                        {/* ── Left: Text content ── */}
+                        <div className="flex-1 text-center lg:text-left">
+                            {/* Badge */}
+                            <div className="inline-flex items-center gap-2 border border-lk-border-bright bg-lk-surface/70 backdrop-blur-sm rounded-full px-4 py-1.5 text-[11px] font-semibold tracking-[0.16em] text-lk-muted-bright uppercase mb-8">
+                                <span className="w-1.5 h-1.5 rounded-full bg-lk-cyan animate-pulse" />
+                                Social Proof Marketplace
                             </div>
-                        ))}
+
+                            {/* Headline */}
+                            <h1
+                                className="font-black leading-[0.88] tracking-[-0.04em] mb-6"
+                                style={{ fontFamily: "var(--font-syne)", fontSize: "clamp(2.8rem, 8vw, 6rem)" }}
+                            >
+                                <span className="text-lk-white block">Buy the story.</span>
+                                <span className="text-lk-amber block">Own the narrative.</span>
+                            </h1>
+
+                            {/* Sub */}
+                            <p className="text-lk-muted-bright text-xl mb-2 max-w-lg">
+                                Make them wonder who you&apos;re with.
+                            </p>
+                            <p className="text-lk-muted text-sm md:text-base mb-10 max-w-lg leading-relaxed">
+                                Get tagged, featured, and validated by attractive, successful people.
+                                Engineered social proof. Real results. Your network will notice.
+                            </p>
+
+                            {/* CTAs */}
+                            <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-12">
+                                <Link
+                                    href="/browse"
+                                    className="px-8 py-4 bg-lk-amber text-lk-black font-bold rounded-full text-base tracking-wide hover:brightness-110 transition-all shadow-lg hover:shadow-lk-amber/20 hover:-translate-y-0.5"
+                                >
+                                    Explore Creators →
+                                </Link>
+                                <Link
+                                    href="/register"
+                                    className="px-8 py-4 border border-lk-border-bright text-lk-white font-semibold rounded-full text-base tracking-wide hover:border-lk-muted-bright hover:bg-lk-surface transition-all"
+                                >
+                                    Earn as a Model
+                                </Link>
+                            </div>
+
+                            {/* Stats */}
+                            <div className="flex flex-wrap gap-6 md:gap-10 justify-center lg:justify-start">
+                                {[
+                                    { v: "250K+", l: "Creators" },
+                                    { v: "4.8M+", l: "Proof Moments" },
+                                    { v: "96%", l: "Satisfaction" },
+                                ].map((s) => (
+                                    <div key={s.l}>
+                                        <div
+                                            className="text-2xl font-extrabold text-lk-white"
+                                            style={{ fontFamily: "var(--font-syne)" }}
+                                        >
+                                            {s.v}
+                                        </div>
+                                        <div className="text-[11px] text-lk-muted mt-0.5 tracking-wide uppercase">{s.l}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* ── Right: iPhone demo ── */}
+                        <div className="flex-shrink-0 hidden md:flex items-center justify-center">
+                            <PhoneDemo />
+                        </div>
+
                     </div>
                 </div>
             </section>
