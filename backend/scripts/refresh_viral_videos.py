@@ -78,39 +78,51 @@ def _find_most_viral_url(platform: str, handle: str) -> Optional[str]:
         return None
 
 
-def _write_cookies_file() -> Optional[str]:
-    """
-    If TIKTOK_COOKIES_B64 env var is set (base64-encoded Netscape cookies.txt),
-    write it to a temp file and return the path.  Returns None if not set.
-    """
-    b64 = os.environ.get("TIKTOK_COOKIES_B64", "").strip()
-    if not b64:
-        return None
-    try:
-        import base64
-        cookie_bytes = base64.b64decode(b64)
-        with tempfile.NamedTemporaryFile(
-            mode="wb", suffix=".txt", delete=False, prefix="tiktok_cookies_"
-        ) as f:
-            f.write(cookie_bytes)
-            return f.name
-    except Exception as exc:
-        print(f"  [cookies] Failed to decode TIKTOK_COOKIES_B64: {exc}")
-        return None
-
-
 def _download_video(video_page_url: str, output_path: str) -> bool:
     """
-    Download the best available ≤720p MP4 to output_path.
-    Uses TikTok session cookies if TIKTOK_COOKIES_B64 is set.
+    Download TikTok video via tikwm.com (free, no API key required).
+    Falls back to yt-dlp for non-TikTok URLs.
     Returns True on success.
     """
+    import requests as req
+
+    # Use tikwm.com for TikTok URLs — no auth, no API key, free
+    if "tiktok.com" in video_page_url:
+        try:
+            resp = req.post(
+                "https://www.tikwm.com/api/",
+                json={"url": video_page_url, "hd": 1},
+                timeout=20,
+            )
+            data = resp.json()
+            if data.get("code") == 0:
+                video_info = data["data"]
+                cdn_url = video_info.get("hdplay") or video_info.get("play")
+                size = video_info.get("size") or video_info.get("hd_size") or 0
+
+                if cdn_url and size > 0:
+                    dl = req.get(cdn_url, timeout=60, stream=True)
+                    dl.raise_for_status()
+                    with open(output_path, "wb") as f:
+                        for chunk in dl.iter_content(chunk_size=1024 * 256):
+                            f.write(chunk)
+                    if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
+                        return True
+                else:
+                    print(f"  [tikwm] No video stream (size={size}) — may be audio-only TikTok")
+                    return False
+            else:
+                print(f"  [tikwm] API error: {data.get('msg')}")
+        except Exception as exc:
+            print(f"  [tikwm] Failed: {exc}")
+        return False
+
+    # Fallback to yt-dlp for Instagram/YouTube/other URLs
     try:
         import yt_dlp
     except ImportError:
+        print("  [yt-dlp] not installed")
         return False
-
-    cookies_path = _write_cookies_file()
 
     ydl_opts = {
         "quiet": True,
@@ -119,38 +131,20 @@ def _download_video(video_page_url: str, output_path: str) -> bool:
         "outtmpl": output_path,
         "max_filesize": 50 * 1024 * 1024,
         "merge_output_format": "mp4",
-        "extractor_args": {"tiktok": {"app_name": ["tiktok_web"], "app_version": ["20.9.3"]}},
-        "http_headers": {
-            "User-Agent": (
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-                "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/124.0.0.0 Safari/537.36"
-            ),
-            "Referer": "https://www.tiktok.com/",
-        },
     }
-
-    if cookies_path:
-        ydl_opts["cookiefile"] = cookies_path
-        print(f"  [cookies] Using session cookies from TIKTOK_COOKIES_B64")
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([video_page_url])
-
         if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
             return True
         if os.path.exists(output_path + ".mp4") and os.path.getsize(output_path + ".mp4") > 0:
             os.rename(output_path + ".mp4", output_path)
             return True
         return False
-
     except Exception as exc:
         print(f"  [yt-dlp] Download failed: {exc}")
         return False
-    finally:
-        if cookies_path and os.path.exists(cookies_path):
-            os.unlink(cookies_path)
 
 
 # ---------------------------------------------------------------------------
