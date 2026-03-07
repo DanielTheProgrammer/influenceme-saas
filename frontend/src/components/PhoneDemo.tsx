@@ -3,26 +3,26 @@
 import { useState, useEffect, useRef } from "react";
 
 const STORY_USERS = [
-    { name: "sofia_m",   grad: "linear-gradient(135deg,#FF6B9D,#FE7E73)", ring: "linear-gradient(45deg,#FF6B9D,#FCAF45,#E1306C)" },
-    { name: "maya.k",    grad: "linear-gradient(135deg,#A29BFE,#6C5CE7)", ring: "linear-gradient(45deg,#A29BFE,#FCAF45,#E1306C)" },
-    { name: "bella_",    grad: "linear-gradient(135deg,#FD79A8,#E84393)", ring: "linear-gradient(45deg,#FD79A8,#FCAF45,#E1306C)" },
-    { name: "zara.off",  grad: "linear-gradient(135deg,#FDCB6E,#E17055)", ring: "linear-gradient(45deg,#FDCB6E,#FCAF45,#E1306C)" },
-    { name: "emma.v",    grad: "linear-gradient(135deg,#74B9FF,#0984E3)", ring: "linear-gradient(45deg,#74B9FF,#FCAF45,#E1306C)" },
+    { name: "sofia_m",  ring: "linear-gradient(45deg,#FF6B9D,#FCAF45,#E1306C)", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
+    { name: "maya.k",   ring: "linear-gradient(45deg,#A29BFE,#FCAF45,#E1306C)", avatar: "https://randomuser.me/api/portraits/women/68.jpg" },
+    { name: "bella_",   ring: "linear-gradient(45deg,#FD79A8,#FCAF45,#E1306C)", avatar: "https://randomuser.me/api/portraits/women/32.jpg" },
+    { name: "zara.off", ring: "linear-gradient(45deg,#FDCB6E,#FCAF45,#E1306C)", avatar: "https://randomuser.me/api/portraits/women/17.jpg" },
+    { name: "emma.v",   ring: "linear-gradient(45deg,#74B9FF,#FCAF45,#E1306C)", avatar: "https://randomuser.me/api/portraits/women/55.jpg" },
 ];
 
 const STREAM_COMMENTS = [
-    { user: "sofia_m",    text: "omg you look amazing 😍",                  color: "#FF6B9D", grad: "linear-gradient(135deg,#FF6B9D,#FE7E73)" },
-    { user: "maya.k",     text: "tagged you in my story!! 🏷️",             color: "#A29BFE", grad: "linear-gradient(135deg,#A29BFE,#6C5CE7)" },
-    { user: "alex_r",     text: "who IS this?? I need to know 👀",          color: "#74B9FF", grad: "linear-gradient(135deg,#74B9FF,#0984E3)" },
-    { user: "bella_",     text: "your aura rn bestie ✨",                    color: "#FD79A8", grad: "linear-gradient(135deg,#FD79A8,#E84393)" },
-    { user: "zara.off",   text: "just tagged you again, sorry not sorry 😭", color: "#FDCB6E", grad: "linear-gradient(135deg,#FDCB6E,#E17055)" },
-    { user: "emma.v",     text: "we NEED to collab 🤝",                      color: "#55EFC4", grad: "linear-gradient(135deg,#55EFC4,#00B894)" },
-    { user: "lily.rose",  text: "girlies asking about you everywhere lol",   color: "#FF7675", grad: "linear-gradient(135deg,#FF7675,#D63031)" },
-    { user: "ava.k",      text: "your ex definitely saw this 💅",            color: "#E84393", grad: "linear-gradient(135deg,#E84393,#9B59B6)" },
-    { user: "nina.m",     text: "tagged you in 3 stories tonight omg",       color: "#C8D6E5", grad: "linear-gradient(135deg,#C8D6E5,#8395A7)" },
-    { user: "chloe_",     text: "following!! profile is goals 🫶",           color: "#6C5CE7", grad: "linear-gradient(135deg,#6C5CE7,#A29BFE)" },
-    { user: "leila.j",    text: "you're literally everywhere rn 🔥",         color: "#F0A500", grad: "linear-gradient(135deg,#F0A500,#E17055)" },
-    { user: "sara.off",   text: "this story is going viral bestie",          color: "#00CDB4", grad: "linear-gradient(135deg,#00CDB4,#0984E3)" },
+    { user: "sofia_m",    text: "omg you look amazing 😍",                  color: "#FF6B9D", avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
+    { user: "maya.k",     text: "tagged you in my story!! 🏷️",             color: "#A29BFE", avatar: "https://randomuser.me/api/portraits/women/68.jpg" },
+    { user: "alex_r",     text: "who IS this?? I need to know 👀",          color: "#74B9FF", avatar: "https://randomuser.me/api/portraits/women/21.jpg" },
+    { user: "bella_",     text: "your aura rn bestie ✨",                    color: "#FD79A8", avatar: "https://randomuser.me/api/portraits/women/32.jpg" },
+    { user: "zara.off",   text: "just tagged you again, sorry not sorry 😭", color: "#FDCB6E", avatar: "https://randomuser.me/api/portraits/women/17.jpg" },
+    { user: "emma.v",     text: "we NEED to collab 🤝",                      color: "#55EFC4", avatar: "https://randomuser.me/api/portraits/women/55.jpg" },
+    { user: "lily.rose",  text: "girlies asking about you everywhere lol",   color: "#FF7675", avatar: "https://randomuser.me/api/portraits/women/73.jpg" },
+    { user: "ava.k",      text: "your ex definitely saw this 💅",            color: "#E84393", avatar: "https://randomuser.me/api/portraits/women/89.jpg" },
+    { user: "nina.m",     text: "tagged you in 3 stories tonight omg",       color: "#C8D6E5", avatar: "https://randomuser.me/api/portraits/women/12.jpg" },
+    { user: "chloe_",     text: "following!! profile is goals 🫶",           color: "#6C5CE7", avatar: "https://randomuser.me/api/portraits/women/49.jpg" },
+    { user: "leila.j",    text: "you're literally everywhere rn 🔥",         color: "#F0A500", avatar: "https://randomuser.me/api/portraits/women/36.jpg" },
+    { user: "sara.off",   text: "this story is going viral bestie",          color: "#00CDB4", avatar: "https://randomuser.me/api/portraits/women/61.jpg" },
 ];
 
 const NOTIFICATIONS = [
@@ -212,11 +212,12 @@ export default function PhoneDemo() {
                             {STORY_USERS.map((u) => (
                                 <div key={u.name} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, flexShrink: 0 }}>
                                     <div style={{ padding: 2.5, borderRadius: "50%", background: u.ring }}>
-                                        <div style={{
-                                            width: 38, height: 38, borderRadius: "50%",
-                                            background: u.grad,
-                                            border: "2.5px solid #fff",
-                                        }}/>
+                                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                                        <img
+                                            src={u.avatar}
+                                            alt={u.name}
+                                            style={{ width: 38, height: 38, borderRadius: "50%", border: "2.5px solid #fff", display: "block", objectFit: "cover" }}
+                                        />
                                     </div>
                                     <span style={{ fontSize: 9, color: "#262626", whiteSpace: "nowrap" }}>{u.name}</span>
                                 </div>
@@ -286,15 +287,12 @@ export default function PhoneDemo() {
                                 style={{ display: "flex", alignItems: "center", gap: 6, opacity: 0.35 + (i / comments.length) * 0.65 }}
                             >
                                 {/* Avatar */}
-                                <div style={{
-                                    width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
-                                    background: c.grad,
-                                    display: "flex", alignItems: "center", justifyContent: "center",
-                                    fontSize: 9, fontWeight: 700, color: "#fff",
-                                    border: "1.5px solid rgba(255,255,255,0.6)",
-                                }}>
-                                    {c.user[0].toUpperCase()}
-                                </div>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img
+                                    src={c.avatar}
+                                    alt={c.user}
+                                    style={{ width: 20, height: 20, borderRadius: "50%", flexShrink: 0, objectFit: "cover", border: "1px solid #dbdbdb" }}
+                                />
                                 <span style={{ fontWeight: 700, color: "#262626", fontSize: 11 }}>{c.user} </span>
                                 <span style={{ color: "#262626", fontSize: 11, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{c.text}</span>
                             </div>
