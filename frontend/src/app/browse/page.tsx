@@ -75,9 +75,9 @@ export default function BrowsePage() {
     return (
         <div className="min-h-screen bg-gray-50">
             {/* Page header */}
-            <div className="bg-gradient-to-br from-violet-700 via-blue-700 to-indigo-800 text-white px-4 py-14">
+            <div className="bg-gradient-to-br from-violet-700 via-blue-700 to-indigo-800 text-white px-4 py-10 md:py-14">
                 <div className="max-w-6xl mx-auto">
-                    <h1 className="text-4xl font-extrabold mb-2">Browse Influencers</h1>
+                    <h1 className="text-3xl sm:text-4xl font-extrabold mb-2">Browse Influencers</h1>
                     <p className="text-blue-100 text-lg">
                         {loading
                             ? "Loading creators..."
@@ -135,7 +135,7 @@ export default function BrowsePage() {
                             value={maxPrice}
                             onChange={(e) => setMaxPrice(e.target.value)}
                             min="0"
-                            className="border border-gray-200 rounded-xl pl-7 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-violet-500 outline-none w-36"
+                            className="border border-gray-200 rounded-xl pl-7 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-violet-500 outline-none w-full md:w-36"
                         />
                     </div>
                     {hasFilters && (

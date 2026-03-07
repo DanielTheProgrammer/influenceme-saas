@@ -73,7 +73,7 @@ export default function HomePage() {
                         Live marketplace — real influencers, real engagement
                     </div>
 
-                    <h1 className="text-5xl md:text-6xl font-extrabold leading-tight mb-6 tracking-tight">
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-6 tracking-tight">
                         Real engagement from<br />
                         <span className="bg-gradient-to-r from-pink-300 via-yellow-200 to-cyan-300 bg-clip-text text-transparent">
                             influencers you love
@@ -332,7 +332,7 @@ export default function HomePage() {
                     <p className="text-center text-gray-500 mb-14">Fans always browse and buy for free. Influencers pay only for pro features.</p>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         {/* Fan */}
-                        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center">
+                        <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 text-center">
                             <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
                                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -357,7 +357,7 @@ export default function HomePage() {
                         </div>
 
                         {/* Influencer Basic */}
-                        <div className="bg-white border border-gray-200 rounded-2xl p-8 text-center">
+                        <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 text-center">
                             <div className="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center mx-auto mb-4">
                                 <svg className="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -382,7 +382,7 @@ export default function HomePage() {
                         </div>
 
                         {/* Influencer Pro */}
-                        <div className="bg-gradient-to-b from-violet-600 to-indigo-700 rounded-2xl p-8 text-center relative shadow-xl shadow-violet-200">
+                        <div className="bg-gradient-to-b from-violet-600 to-indigo-700 rounded-2xl p-6 md:p-8 text-center relative shadow-xl shadow-violet-200">
                             <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-pink-500 to-orange-500 text-white text-xs font-bold px-4 py-1.5 rounded-full">
                                 MOST POPULAR
                             </div>
@@ -419,7 +419,7 @@ export default function HomePage() {
                     <div className="absolute bottom-10 right-1/4 w-64 h-64 bg-cyan-400 rounded-full blur-3xl" />
                 </div>
                 <div className="relative max-w-2xl mx-auto">
-                    <h2 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
+                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
                         Ready to connect with<br />your favorite creators?
                     </h2>
                     <p className="text-blue-100 text-lg mb-10 leading-relaxed">

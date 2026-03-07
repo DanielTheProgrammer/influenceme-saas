@@ -124,9 +124,9 @@ export default function FanRequestsPage() {
 
     return (
         <div className="max-w-4xl mx-auto px-4 py-8">
-            <div className="flex justify-between items-center mb-8">
+            <div className="flex flex-wrap gap-4 justify-between items-center mb-8">
                 <h1 className="text-3xl font-bold">My Requests</h1>
-                <Link href="/browse" className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors">
+                <Link href="/browse" className="px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors whitespace-nowrap">
                     Browse Influencers
                 </Link>
             </div>
@@ -153,8 +153,8 @@ export default function FanRequestsPage() {
                                 />
                             )}
                             <div className="flex-1">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div>
+                                <div className="flex flex-wrap gap-2 justify-between items-start mb-2">
+                                    <div className="min-w-0">
                                         <p className="font-bold text-gray-900 capitalize">
                                             {req.service?.engagement_type.replace(/_/g, " ") ?? `Service #${req.service_id}`}
                                         </p>
@@ -168,7 +168,7 @@ export default function FanRequestsPage() {
                                             </p>
                                         )}
                                     </div>
-                                    <span className={`px-3 py-1 rounded-full text-xs font-bold ${STATUS_STYLES[req.status] || "bg-gray-100 text-gray-800"}`}>
+                                    <span className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-bold ${STATUS_STYLES[req.status] || "bg-gray-100 text-gray-800"}`}>
                                         {req.status.replace(/_/g, " ").toUpperCase()}
                                     </span>
                                 </div>
