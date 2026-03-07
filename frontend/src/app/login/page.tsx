@@ -8,11 +8,7 @@ import Link from "next/link";
 function LoginForm() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const registered = searchParams.get("registered") === "1";
-    const regRole = searchParams.get("role");
-    const redirectTo = registered
-        ? (regRole === "influencer" ? "/onboarding/influencer" : "/onboarding/fan")
-        : (searchParams.get("redirect") || "/dashboard");
+    const redirectTo = searchParams.get("redirect") || "/dashboard";
 
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
@@ -51,12 +47,6 @@ function LoginForm() {
                 </h1>
                 <p className="text-lk-muted mt-1.5 text-sm">Sign in to your account</p>
             </div>
-
-            {registered && (
-                <div className="mb-5 p-3 bg-lk-cyan/10 border border-lk-cyan/20 text-lk-cyan rounded-xl text-sm">
-                    Account created! Sign in below.
-                </div>
-            )}
 
             {error && (
                 <div className="mb-5 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-sm">
