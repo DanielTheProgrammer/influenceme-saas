@@ -34,5 +34,12 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # Optional: base64-encoded Netscape cookies.txt from your TikTok session.
+          # Required for TikTok video downloads (TikTok blocks unauthenticated downloads).
+          # Export from Chrome using "Get cookies.txt LOCALLY" extension, then:
+          #   base64 -w 0 cookies.txt | pbcopy   (Mac)
+          #   base64 -w 0 cookies.txt            (Linux)
+          # Refresh every ~30 days when session expires.
+          TIKTOK_COOKIES_B64: ${{ secrets.TIKTOK_COOKIES_B64 }}
         run: |
           python backend/scripts/refresh_viral_videos.py

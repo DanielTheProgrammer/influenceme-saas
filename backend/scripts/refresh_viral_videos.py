@@ -78,9 +78,31 @@ def _find_most_viral_url(platform: str, handle: str) -> Optional[str]:
         return None
 
 
+def _write_cookies_file() -> Optional[str]:
+    """
+    If TIKTOK_COOKIES_B64 env var is set (base64-encoded Netscape cookies.txt),
+    write it to a temp file and return the path.  Returns None if not set.
+    """
+    b64 = os.environ.get("TIKTOK_COOKIES_B64", "").strip()
+    if not b64:
+        return None
+    try:
+        import base64
+        cookie_bytes = base64.b64decode(b64)
+        with tempfile.NamedTemporaryFile(
+            mode="wb", suffix=".txt", delete=False, prefix="tiktok_cookies_"
+        ) as f:
+            f.write(cookie_bytes)
+            return f.name
+    except Exception as exc:
+        print(f"  [cookies] Failed to decode TIKTOK_COOKIES_B64: {exc}")
+        return None
+
+
 def _download_video(video_page_url: str, output_path: str) -> bool:
     """
     Download the best available ≤720p MP4 to output_path.
+    Uses TikTok session cookies if TIKTOK_COOKIES_B64 is set.
     Returns True on success.
     """
     try:
@@ -88,36 +110,36 @@ def _download_video(video_page_url: str, output_path: str) -> bool:
     except ImportError:
         return False
 
+    cookies_path = _write_cookies_file()
+
     ydl_opts = {
         "quiet": True,
         "no_warnings": True,
-        # Prefer a single MP4 file ≤720p to keep sizes reasonable
-        "format": (
-            "bestvideo[ext=mp4][height<=720]+bestaudio[ext=m4a]"
-            "/best[ext=mp4][height<=720]"
-            "/best[height<=720]"
-            "/best"
-        ),
+        "format": "best[ext=mp4]/best",
         "outtmpl": output_path,
-        "max_filesize": 50 * 1024 * 1024,  # 50 MB hard cap
+        "max_filesize": 50 * 1024 * 1024,
         "merge_output_format": "mp4",
+        "extractor_args": {"tiktok": {"app_name": ["tiktok_web"], "app_version": ["20.9.3"]}},
         "http_headers": {
             "User-Agent": (
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
                 "Chrome/124.0.0.0 Safari/537.36"
-            )
+            ),
+            "Referer": "https://www.tiktok.com/",
         },
     }
+
+    if cookies_path:
+        ydl_opts["cookiefile"] = cookies_path
+        print(f"  [cookies] Using session cookies from TIKTOK_COOKIES_B64")
 
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([video_page_url])
 
-        # yt-dlp may add an extension if output_path has no extension — check both
         if os.path.exists(output_path) and os.path.getsize(output_path) > 0:
             return True
-        # Check with .mp4 appended
         if os.path.exists(output_path + ".mp4") and os.path.getsize(output_path + ".mp4") > 0:
             os.rename(output_path + ".mp4", output_path)
             return True
@@ -126,6 +148,9 @@ def _download_video(video_page_url: str, output_path: str) -> bool:
     except Exception as exc:
         print(f"  [yt-dlp] Download failed: {exc}")
         return False
+    finally:
+        if cookies_path and os.path.exists(cookies_path):
+            os.unlink(cookies_path)
 
 
 # ---------------------------------------------------------------------------
