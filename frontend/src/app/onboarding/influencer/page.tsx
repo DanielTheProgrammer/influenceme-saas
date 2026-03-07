@@ -3,20 +3,21 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 const ENGAGEMENT_TYPES = [
-    { value: "story_tag",       label: "Story Tag",        suggested: 25, desc: "Tag in an Instagram/TikTok story" },
-    { value: "story_highlight", label: "Story Highlight",  suggested: 45, desc: "Permanent highlight feature" },
-    { value: "permanent_follow",label: "Permanent Follow", suggested: 15, desc: "Follow fan's account permanently" },
-    { value: "timed_follow",    label: "Timed Follow",     suggested: 10, desc: "Follow for a set number of days" },
-    { value: "post_tag",        label: "Post Tag",         suggested: 35, desc: "Tag in a feed post" },
-    { value: "comment",         label: "Comment",          suggested: 8,  desc: "Leave a comment on fan's post" },
+    { value: "story_tag",        label: "Story Tag",        suggested: 25, desc: "Tag in an Instagram/TikTok story" },
+    { value: "story_highlight",  label: "Story Highlight",  suggested: 45, desc: "Permanent highlight feature" },
+    { value: "permanent_follow", label: "Permanent Follow", suggested: 15, desc: "Follow fan's account permanently" },
+    { value: "timed_follow",     label: "Timed Follow",     suggested: 10, desc: "Follow for a set number of days" },
+    { value: "post_tag",         label: "Post Tag",         suggested: 35, desc: "Tag in a feed post" },
+    { value: "comment",          label: "Comment",          suggested: 8,  desc: "Leave a comment on fan's post" },
 ];
 
-const STEPS = ["Profile", "Social", "Services", "Go Live"];
+const STEPS = ["Socials", "Profile", "Services", "Go Live"];
 
 const INPUT = "w-full bg-lk-black border border-lk-border text-lk-white placeholder:text-lk-muted rounded-xl px-4 py-3 text-sm focus:border-lk-amber outline-none transition-colors";
 const LABEL = "block text-xs font-semibold text-lk-muted-bright uppercase tracking-[0.12em] mb-1.5";
@@ -26,18 +27,22 @@ export default function InfluencerOnboardingPage() {
     const router = useRouter();
     const token = (session as any)?.accessToken;
 
-    const [step, setStep] = useState(0);
-    const [saving, setSaving] = useState(false);
+    const [step,    setStep]    = useState(0);
+    const [saving,  setSaving]  = useState(false);
+    const [fetching, setFetching] = useState(false);
+    const [synced,  setSynced]  = useState(false); // did we successfully fetch social data?
 
+    // Socials (step 0)
+    const [instagramHandle, setInstagramHandle] = useState("");
+    const [tiktokHandle,    setTiktokHandle]    = useState("");
+
+    // Profile (step 1) — pre-filled from fetch
     const [displayName,    setDisplayName]    = useState("");
     const [bio,            setBio]            = useState("");
     const [profilePicUrl,  setProfilePicUrl]  = useState("");
     const [followersCount, setFollowersCount] = useState("");
 
-    const [instagramHandle, setInstagramHandle] = useState("");
-    const [tiktokHandle,    setTiktokHandle]    = useState("");
-    const [syncing, setSyncing] = useState<"instagram" | "tiktok" | null>(null);
-
+    // Services (step 2)
     const [services, setServices] = useState<{ type: string; price: string }[]>([
         { type: "story_tag", price: "25" },
     ]);
@@ -46,24 +51,45 @@ export default function InfluencerOnboardingPage() {
         if (status === "unauthenticated") router.push("/login");
     }, [status, router]);
 
-    const syncFromSocial = async (platform: "instagram" | "tiktok") => {
-        const handle = (platform === "instagram" ? instagramHandle : tiktokHandle).trim().replace(/^@/, "");
-        if (!handle) { toast.error(`Enter your ${platform} handle first.`); return; }
-        setSyncing(platform);
+    // ── Fetch profile from social ──────────────────────────────
+    const fetchSocialProfile = async (): Promise<boolean> => {
+        const ig = instagramHandle.trim().replace(/^@/, "");
+        const tt = tiktokHandle.trim().replace(/^@/, "");
+        if (!ig && !tt) {
+            toast.error("Enter at least one social handle.");
+            return false;
+        }
+
+        setFetching(true);
+        const platform = ig ? "instagram" : "tiktok";
+        const handle   = ig || tt;
+
         try {
-            const res = await fetch(`${API_URL}/social/preview?platform=${platform}&handle=${encodeURIComponent(handle)}`);
-            if (!res.ok) throw new Error("Could not fetch profile data.");
+            const res = await fetch(
+                `${API_URL}/social/preview?platform=${platform}&handle=${encodeURIComponent(handle)}`
+            );
+            if (!res.ok) throw new Error("Could not fetch profile.");
             const data = await res.json();
-            setProfilePicUrl(data.profile_picture_url);
-            if (data.followers_count) setFollowersCount(String(data.followers_count));
-            toast.success("Profile synced!");
+
+            // Pre-fill whatever the API returns
+            if (data.display_name)       setDisplayName(data.display_name);
+            if (data.bio)                setBio(data.bio);
+            if (data.profile_picture_url) setProfilePicUrl(data.profile_picture_url);
+            if (data.followers_count)    setFollowersCount(String(data.followers_count));
+
+            setSynced(true);
+            return true;
         } catch (err: any) {
-            toast.error(err.message || "Sync failed.");
+            // Soft fail — let them fill manually
+            toast.error("Couldn't auto-fetch your profile — you can fill it in manually.");
+            setSynced(false);
+            return true; // still advance
         } finally {
-            setSyncing(null);
+            setFetching(false);
         }
     };
 
+    // ── Save profile to backend ────────────────────────────────
     const saveProfile = async () => {
         if (!displayName.trim()) { toast.error("Display name is required."); return false; }
         setSaving(true);
@@ -74,8 +100,8 @@ export default function InfluencerOnboardingPage() {
                 body: JSON.stringify({
                     display_name: displayName,
                     bio: bio || null,
-                    instagram_handle: instagramHandle || null,
-                    tiktok_handle: tiktokHandle || null,
+                    instagram_handle: instagramHandle.trim().replace(/^@/, "") || null,
+                    tiktok_handle: tiktokHandle.trim().replace(/^@/, "") || null,
                     profile_picture_url: profilePicUrl || null,
                     followers_count: followersCount ? parseInt(followersCount) : null,
                 }),
@@ -90,6 +116,7 @@ export default function InfluencerOnboardingPage() {
         }
     };
 
+    // ── Save services to backend ───────────────────────────────
     const saveServices = async () => {
         const valid = services.filter(s => s.price && parseFloat(s.price) > 0);
         if (valid.length === 0) { toast.error("Add at least one service."); return false; }
@@ -112,14 +139,25 @@ export default function InfluencerOnboardingPage() {
         }
     };
 
+    // ── Step progression ───────────────────────────────────────
     const handleNext = async () => {
-        if (step === 0)      { const ok = await saveProfile();  if (ok) setStep(1); }
-        else if (step === 1) { const ok = await saveProfile();  if (ok) setStep(2); }
-        else if (step === 2) { const ok = await saveServices(); if (ok) setStep(3); }
-        else                 { router.push("/dashboard"); }
+        if (step === 0) {
+            const ok = await fetchSocialProfile();
+            if (ok) setStep(1);
+        } else if (step === 1) {
+            const ok = await saveProfile();
+            if (ok) setStep(2);
+        } else if (step === 2) {
+            const ok = await saveServices();
+            if (ok) setStep(3);
+        } else {
+            router.push("/dashboard");
+        }
     };
 
     if (status === "loading") return null;
+
+    const isBusy = saving || fetching;
 
     return (
         <div className="min-h-screen bg-lk-black flex items-center justify-center px-4 py-16 relative overflow-hidden">
@@ -130,15 +168,16 @@ export default function InfluencerOnboardingPage() {
                 style={{ background: "radial-gradient(circle, rgba(0,205,180,0.05) 0%, transparent 70%)" }} />
 
             <div className="relative max-w-lg w-full">
+
                 {/* Step indicator */}
-                <div className="flex items-center justify-center gap-0 mb-10">
+                <div className="flex items-center justify-center mb-10">
                     {STEPS.map((label, i) => (
                         <div key={label} className="flex items-center">
                             <div className="flex items-center gap-2">
                                 <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold border-2 transition-all ${
                                     i < step  ? "bg-lk-amber border-lk-amber text-lk-black" :
-                                    i === step ? "border-lk-amber text-lk-amber bg-transparent" :
-                                                 "border-lk-border text-lk-muted bg-transparent"
+                                    i === step ? "border-lk-amber text-lk-amber" :
+                                                 "border-lk-border text-lk-muted"
                                 }`} style={{ fontFamily: "var(--font-syne)" }}>
                                     {i < step ? "✓" : i + 1}
                                 </div>
@@ -156,15 +195,125 @@ export default function InfluencerOnboardingPage() {
                 {/* Card */}
                 <div className="bg-lk-surface border border-lk-border rounded-2xl p-8">
 
-                    {/* ── Step 0: Profile ── */}
+                    {/* ── Step 0: Socials ── */}
                     {step === 0 && (
                         <div>
                             <p className="text-[11px] font-semibold tracking-[0.2em] text-lk-amber uppercase mb-2">Step 1</p>
                             <h1 className="font-black text-lk-white text-2xl tracking-[-0.02em] mb-1" style={{ fontFamily: "var(--font-syne)" }}>
-                                Set up your profile
+                                What&apos;s your handle?
                             </h1>
-                            <p className="text-lk-muted text-sm mb-6">This is how fans discover you in the marketplace.</p>
+                            <p className="text-lk-muted text-sm mb-7">
+                                We&apos;ll pull your name, bio, profile pic and follower count automatically.
+                            </p>
+
                             <div className="space-y-4">
+                                {/* Instagram */}
+                                <div>
+                                    <label className={LABEL}>
+                                        <span className="inline-flex items-center gap-1.5">
+                                            {/* IG gradient icon */}
+                                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="url(#ig)" strokeWidth="2">
+                                                <defs>
+                                                    <linearGradient id="ig" x1="0" y1="0" x2="1" y2="1">
+                                                        <stop offset="0%" stopColor="#E1306C"/>
+                                                        <stop offset="100%" stopColor="#FCAF45"/>
+                                                    </linearGradient>
+                                                </defs>
+                                                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"/>
+                                                <circle cx="12" cy="12" r="4"/>
+                                                <circle cx="17.5" cy="6.5" r="1" fill="#FCAF45" stroke="none"/>
+                                            </svg>
+                                            Instagram Handle
+                                        </span>
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lk-muted text-sm">@</span>
+                                        <input
+                                            value={instagramHandle}
+                                            onChange={e => setInstagramHandle(e.target.value)}
+                                            className={INPUT + " pl-8"}
+                                            placeholder="yourhandle"
+                                        />
+                                    </div>
+                                </div>
+
+                                {/* TikTok */}
+                                <div>
+                                    <label className={LABEL}>
+                                        <span className="inline-flex items-center gap-1.5">
+                                            <svg width="12" height="13" viewBox="0 0 24 24" fill="currentColor" className="text-lk-muted-bright">
+                                                <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.5a8.16 8.16 0 004.77 1.52V6.56a4.85 4.85 0 01-1-.13z"/>
+                                            </svg>
+                                            TikTok Handle
+                                        </span>
+                                    </label>
+                                    <div className="relative">
+                                        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-lk-muted text-sm">@</span>
+                                        <input
+                                            value={tiktokHandle}
+                                            onChange={e => setTiktokHandle(e.target.value)}
+                                            className={INPUT + " pl-8"}
+                                            placeholder="yourhandle"
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="mt-3 bg-lk-black border border-lk-border rounded-xl p-3 text-xs text-lk-muted leading-relaxed">
+                                Enter at least one handle. We&apos;ll try to fetch your profile — you can edit everything on the next screen.
+                            </div>
+                        </div>
+                    )}
+
+                    {/* ── Step 1: Profile (pre-filled) ── */}
+                    {step === 1 && (
+                        <div>
+                            <p className="text-[11px] font-semibold tracking-[0.2em] text-lk-amber uppercase mb-2">Step 2</p>
+                            <h1 className="font-black text-lk-white text-2xl tracking-[-0.02em] mb-1" style={{ fontFamily: "var(--font-syne)" }}>
+                                Your public profile
+                            </h1>
+                            <p className="text-lk-muted text-sm mb-6">
+                                This is how fans see you in the marketplace. Edit anything below.
+                            </p>
+
+                            {synced && (
+                                <div className="flex items-center gap-2 mb-5 text-xs text-lk-cyan bg-lk-cyan/10 border border-lk-cyan/20 rounded-xl px-3 py-2">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                    Profile synced from {instagramHandle ? "Instagram" : "TikTok"} — edit freely below.
+                                </div>
+                            )}
+
+                            <div className="space-y-4">
+                                {/* Profile pic preview */}
+                                {profilePicUrl && (
+                                    <div className="flex items-center gap-4 bg-lk-black border border-lk-border rounded-xl p-3">
+                                        <Image
+                                            src={profilePicUrl}
+                                            alt="Profile"
+                                            width={52}
+                                            height={52}
+                                            className="w-14 h-14 rounded-full object-cover border-2 border-lk-border flex-shrink-0"
+                                            unoptimized
+                                        />
+                                        <div className="flex-1 min-w-0">
+                                            <p className="text-xs text-lk-muted-bright font-semibold mb-1">Profile picture</p>
+                                            <input
+                                                value={profilePicUrl}
+                                                onChange={e => setProfilePicUrl(e.target.value)}
+                                                className="w-full bg-transparent border-b border-lk-border text-lk-muted text-xs outline-none focus:border-lk-amber pb-0.5 transition-colors truncate"
+                                                placeholder="URL"
+                                            />
+                                        </div>
+                                    </div>
+                                )}
+
+                                {!profilePicUrl && (
+                                    <div>
+                                        <label className={LABEL}>Profile Picture URL</label>
+                                        <input value={profilePicUrl} onChange={e => setProfilePicUrl(e.target.value)} className={INPUT} placeholder="https://..." />
+                                    </div>
+                                )}
+
                                 <div>
                                     <label className={LABEL}>Display Name *</label>
                                     <input value={displayName} onChange={e => setDisplayName(e.target.value)} className={INPUT} placeholder="Your public name" />
@@ -174,57 +323,8 @@ export default function InfluencerOnboardingPage() {
                                     <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className={INPUT + " resize-none"} placeholder="Tell fans about yourself..." />
                                 </div>
                                 <div>
-                                    <label className={LABEL}>Profile Picture URL</label>
-                                    <input value={profilePicUrl} onChange={e => setProfilePicUrl(e.target.value)} className={INPUT} placeholder="Paste URL (or sync from social in next step)" />
-                                </div>
-                                <div>
                                     <label className={LABEL}>Followers Count</label>
                                     <input type="number" min="0" value={followersCount} onChange={e => setFollowersCount(e.target.value)} className={INPUT} placeholder="e.g. 25000" />
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* ── Step 1: Social ── */}
-                    {step === 1 && (
-                        <div>
-                            <p className="text-[11px] font-semibold tracking-[0.2em] text-lk-amber uppercase mb-2">Step 2</p>
-                            <h1 className="font-black text-lk-white text-2xl tracking-[-0.02em] mb-1" style={{ fontFamily: "var(--font-syne)" }}>
-                                Connect your socials
-                            </h1>
-                            <p className="text-lk-muted text-sm mb-6">Add your handles and sync your profile automatically.</p>
-                            <div className="space-y-4">
-                                <div>
-                                    <label className={LABEL}>Instagram Handle</label>
-                                    <div className="flex gap-2">
-                                        <input value={instagramHandle} onChange={e => setInstagramHandle(e.target.value)} className={INPUT} placeholder="yourhandle" />
-                                        <button
-                                            type="button"
-                                            onClick={() => syncFromSocial("instagram")}
-                                            disabled={syncing !== null}
-                                            className="px-4 py-2 text-xs font-bold rounded-xl text-lk-black disabled:opacity-50 flex-shrink-0"
-                                            style={{ background: "linear-gradient(135deg,#E1306C,#FCAF45)" }}
-                                        >
-                                            {syncing === "instagram" ? "…" : "Sync"}
-                                        </button>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label className={LABEL}>TikTok Handle</label>
-                                    <div className="flex gap-2">
-                                        <input value={tiktokHandle} onChange={e => setTiktokHandle(e.target.value)} className={INPUT} placeholder="yourhandle" />
-                                        <button
-                                            type="button"
-                                            onClick={() => syncFromSocial("tiktok")}
-                                            disabled={syncing !== null}
-                                            className="px-4 py-2 text-xs font-bold bg-lk-white text-lk-black rounded-xl hover:bg-lk-muted-bright disabled:opacity-50 flex-shrink-0"
-                                        >
-                                            {syncing === "tiktok" ? "…" : "Sync"}
-                                        </button>
-                                    </div>
-                                </div>
-                                <div className="bg-lk-black border border-lk-border rounded-xl p-4 text-xs text-lk-muted-bright leading-relaxed">
-                                    <span className="text-lk-amber font-semibold">Tip:</span> After going live, verify your accounts from your dashboard by sending a DM with your unique code — this adds a verified badge to your profile.
                                 </div>
                             </div>
                         </div>
@@ -259,9 +359,7 @@ export default function InfluencerOnboardingPage() {
                                                             <option key={t.value} value={t.value}>{t.label}</option>
                                                         ))}
                                                     </select>
-                                                    {suggestion && (
-                                                        <p className="text-xs text-lk-muted mt-1">{suggestion.desc}</p>
-                                                    )}
+                                                    {suggestion && <p className="text-xs text-lk-muted mt-1">{suggestion.desc}</p>}
                                                 </div>
                                                 <div className="flex items-center gap-1 flex-shrink-0">
                                                     <span className="text-lk-muted text-sm font-medium">$</span>
@@ -296,10 +394,7 @@ export default function InfluencerOnboardingPage() {
                     {/* ── Step 3: Go Live ── */}
                     {step === 3 && (
                         <div className="text-center py-4">
-                            <div
-                                className="text-5xl font-black text-lk-amber mb-4 leading-none"
-                                style={{ fontFamily: "var(--font-syne)" }}
-                            >✦</div>
+                            <div className="text-5xl font-black text-lk-amber mb-4 leading-none" style={{ fontFamily: "var(--font-syne)" }}>✦</div>
                             <h1 className="font-black text-lk-white text-2xl tracking-[-0.02em] mb-2" style={{ fontFamily: "var(--font-syne)" }}>
                                 You&apos;re live.
                             </h1>
@@ -309,11 +404,7 @@ export default function InfluencerOnboardingPage() {
                             <div className="bg-lk-black border border-lk-border rounded-xl p-4 text-left mb-4">
                                 <p className="text-xs font-semibold text-lk-amber uppercase tracking-[0.12em] mb-3">Next steps</p>
                                 <ul className="space-y-2 text-sm text-lk-muted-bright">
-                                    {[
-                                        "Verify your social accounts from your dashboard",
-                                        "Add recent post URLs to show off your content",
-                                        "Set up Stripe to receive payouts",
-                                    ].map(item => (
+                                    {["Verify your social accounts from your dashboard", "Add recent post URLs to show off your content", "Set up Stripe to receive payouts"].map(item => (
                                         <li key={item} className="flex items-start gap-2">
                                             <span className="text-lk-cyan mt-0.5 flex-shrink-0">✓</span>
                                             {item}
@@ -324,21 +415,30 @@ export default function InfluencerOnboardingPage() {
                         </div>
                     )}
 
+                    {/* CTA */}
                     <button
                         onClick={handleNext}
-                        disabled={saving}
+                        disabled={isBusy}
                         className="mt-6 w-full py-3.5 bg-lk-amber text-lk-black font-bold rounded-full text-sm tracking-wide hover:brightness-110 transition-all disabled:opacity-50 shadow-lg hover:shadow-lk-amber/20"
                         style={{ fontFamily: "var(--font-syne)" }}
                     >
-                        {saving ? "Saving…" : step === 3 ? "Go to Dashboard →" : "Continue →"}
+                        {fetching ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+                                Fetching your profile…
+                            </span>
+                        ) : saving ? "Saving…" :
+                          step === 0 ? "Fetch My Profile →" :
+                          step === 3 ? "Go to Dashboard →" :
+                          "Continue →"}
                     </button>
 
                     {step < 3 && (
                         <button
-                            onClick={() => router.push("/dashboard")}
+                            onClick={() => step === 0 ? router.push("/dashboard") : setStep(s => s + 1)}
                             className="mt-3 w-full py-2 text-xs text-lk-muted hover:text-lk-muted-bright transition-colors"
                         >
-                            Skip for now
+                            {step === 0 ? "Skip — I'll fill in manually" : "Skip for now"}
                         </button>
                     )}
                 </div>
