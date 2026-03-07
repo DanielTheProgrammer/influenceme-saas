@@ -21,13 +21,13 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install dependencies
+      - name: Install system dependencies
+        run: sudo apt-get install -y ffmpeg
+
+      - name: Install Python dependencies
         run: |
           pip install --upgrade pip
           pip install yt-dlp psycopg2-binary requests
-
-      - name: Verify FFmpeg is available
-        run: ffmpeg -version | head -1
 
       - name: Run viral video refresh
         env:
