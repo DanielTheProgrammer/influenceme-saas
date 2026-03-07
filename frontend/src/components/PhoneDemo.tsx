@@ -392,7 +392,7 @@ export default function PhoneDemo() {
                 <div style={{ position: "absolute", top: 12, left: "50%", transform: "translateX(-50%)", width: 94, height: 30, borderRadius: 20, background: "#000", zIndex: 20 }} />
 
                 {/* Animated screen */}
-                <div key={view} className="animate-view-in">
+                <div key={view} className="animate-view-in" style={{ position: "absolute", inset: 0 }}>
                     {view === 0 && feedScreen}
                     {view === 1 && dmScreen}
                     {view === 2 && storyScreen}
@@ -423,16 +423,15 @@ export default function PhoneDemo() {
                 )}
             </div>
 
-            {/* View indicator dots */}
+            {/* View indicator dots — decorative only */}
             <div style={{ display: "flex", justifyContent: "center", gap: 6, marginTop: 12 }}>
                 {[0, 1, 2].map(i => (
-                    <button
+                    <div
                         key={i}
-                        onClick={() => setView(i)}
                         style={{
                             width: i === view ? 18 : 6, height: 6, borderRadius: 3,
                             background: i === view ? "#F0A500" : "rgba(255,255,255,0.2)",
-                            transition: "all 0.3s ease", border: "none", cursor: "pointer", padding: 0,
+                            transition: "all 0.3s ease",
                         }}
                     />
                 ))}
