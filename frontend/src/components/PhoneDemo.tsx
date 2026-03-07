@@ -26,11 +26,11 @@ const STREAM_COMMENTS = [
 ];
 
 const NOTIFICATIONS = [
-    "sofia_m tagged you in their story",
-    "maya.k tagged you in a post",
-    "bella_ mentioned you in a story",
-    "zara.off tagged you in their story",
-    "emma.v shared your post to her story",
+    { text: "sofia_m tagged you in their story",    avatar: "https://randomuser.me/api/portraits/women/44.jpg" },
+    { text: "maya.k tagged you in a post",          avatar: "https://randomuser.me/api/portraits/women/68.jpg" },
+    { text: "bella_ mentioned you in a story",      avatar: "https://randomuser.me/api/portraits/women/32.jpg" },
+    { text: "zara.off tagged you in their story",   avatar: "https://randomuser.me/api/portraits/women/17.jpg" },
+    { text: "emma.v shared your post to her story", avatar: "https://randomuser.me/api/portraits/women/55.jpg" },
 ];
 
 let uid = 10;
@@ -39,7 +39,7 @@ export default function PhoneDemo() {
     const [comments, setComments] = useState<(typeof STREAM_COMMENTS[0] & { uid: number })[]>(() =>
         STREAM_COMMENTS.slice(0, 3).map((c, i) => ({ ...c, uid: i }))
     );
-    const [notification, setNotification] = useState<{ text: string; key: number } | null>(null);
+    const [notification, setNotification] = useState<{ text: string; avatar: string; key: number } | null>(null);
     const [likes, setLikes] = useState(2847);
     const [storyCount, setStoryCount] = useState(5);
     const commentIdx = useRef(3);
@@ -61,10 +61,10 @@ export default function PhoneDemo() {
     // Story notifications every 4.5s
     useEffect(() => {
         const show = () => {
-            const text = NOTIFICATIONS[notifIdx.current % NOTIFICATIONS.length];
+            const n = NOTIFICATIONS[notifIdx.current % NOTIFICATIONS.length];
             notifIdx.current++;
             notifKey.current++;
-            setNotification({ text, key: notifKey.current });
+            setNotification({ text: n.text, avatar: n.avatar, key: notifKey.current });
             setStoryCount(prev => prev + 1);
             setTimeout(() => setNotification(null), 3200);
         };
@@ -131,17 +131,8 @@ export default function PhoneDemo() {
                                 borderRadius: "0 0 18px 18px",
                             }}
                         >
-                            <div style={{
-                                width: 32, height: 32, borderRadius: 8, flexShrink: 0,
-                                background: "linear-gradient(135deg,#E1306C,#FCAF45)",
-                                display: "flex", alignItems: "center", justifyContent: "center",
-                            }}>
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5">
-                                    <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
-                                    <circle cx="12" cy="12" r="4" />
-                                    <circle cx="17.5" cy="6.5" r="1" fill="white" stroke="none" />
-                                </svg>
-                            </div>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src={notification.avatar} alt="" style={{ width: 32, height: 32, borderRadius: 8, flexShrink: 0, objectFit: "cover", border: "1.5px solid rgba(255,255,255,0.2)" }}/>
                             <div style={{ flex: 1, minWidth: 0 }}>
                                 <p style={{ color: "#fff", fontSize: 11, fontWeight: 600, margin: 0, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
                                     {notification.text}
@@ -192,11 +183,8 @@ export default function PhoneDemo() {
                             {/* Your story add */}
                             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 2, flexShrink: 0 }}>
                                 <div style={{ position: "relative" }}>
-                                    <div style={{
-                                        width: 44, height: 44, borderRadius: "50%",
-                                        background: "linear-gradient(135deg,#667eea,#764ba2)",
-                                        border: "2px solid #dbdbdb",
-                                    }}/>
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="you" style={{ width: 44, height: 44, borderRadius: "50%", objectFit: "cover", display: "block", border: "2px solid #dbdbdb" }} />
                                     <div style={{
                                         position: "absolute", bottom: -1, right: -1,
                                         width: 16, height: 16, borderRadius: "50%",
@@ -231,12 +219,8 @@ export default function PhoneDemo() {
                     {/* Post header */}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 12px 6px" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                            <div style={{
-                                width: 28, height: 28, borderRadius: "50%",
-                                background: "linear-gradient(135deg,#667eea,#764ba2)",
-                                border: "2px solid #dbdbdb",
-                                flexShrink: 0,
-                            }}/>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="you" style={{ width: 28, height: 28, borderRadius: "50%", objectFit: "cover", flexShrink: 0, border: "2px solid #dbdbdb" }} />
                             <div>
                                 <p style={{ fontSize: 12, fontWeight: 700, color: "#262626", margin: 0 }}>you</p>
                                 <p style={{ fontSize: 9, color: "#8E8E8E", margin: 0 }}>New York, NY</p>
@@ -247,11 +231,45 @@ export default function PhoneDemo() {
                         </svg>
                     </div>
 
-                    {/* Post image */}
-                    <div style={{
-                        height: 138, flexShrink: 0,
-                        background: "linear-gradient(135deg,#667eea 0%,#764ba2 45%,#f093fb 100%)",
-                    }}/>
+                    {/* Post image — party scene */}
+                    <div style={{ height: 138, flexShrink: 0, position: "relative", overflow: "hidden", background: "linear-gradient(160deg,#0d0010 0%,#2b0a3d 35%,#5c1a5a 65%,#1a0020 100%)" }}>
+                        {/* Ambient party lights */}
+                        <div style={{ position: "absolute", top: -10, left: 30, width: 70, height: 70, borderRadius: "50%", background: "rgba(255,80,140,0.25)", filter: "blur(18px)" }}/>
+                        <div style={{ position: "absolute", bottom: -10, right: 20, width: 60, height: 60, borderRadius: "50%", background: "rgba(120,60,255,0.3)", filter: "blur(16px)" }}/>
+                        <div style={{ position: "absolute", top: 10, right: 50, width: 40, height: 40, borderRadius: "50%", background: "rgba(255,160,0,0.2)", filter: "blur(14px)" }}/>
+
+                        {/* People row */}
+                        <div style={{ position: "absolute", bottom: 10, left: 0, right: 0, display: "flex", justifyContent: "space-evenly", alignItems: "flex-end" }}>
+
+                            {/* Girl 1 — sofia_m */}
+                            <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                {/* Tag box */}
+                                <div style={{ background: "rgba(255,255,255,0.92)", borderRadius: 4, padding: "2px 5px", marginBottom: 4, whiteSpace: "nowrap", fontSize: 8, fontWeight: 700, color: "#262626", boxShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
+                                    @sofia_m
+                                    <div style={{ position: "absolute", bottom: -4, left: "50%", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: "4px solid rgba(255,255,255,0.92)" }}/>
+                                </div>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="sofia_m" style={{ width: 46, height: 58, borderRadius: "12px 12px 0 0", objectFit: "cover", objectPosition: "top", border: "2px solid rgba(255,255,255,0.25)" }}/>
+                            </div>
+
+                            {/* Guy — you (center, taller) */}
+                            <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="you" style={{ width: 54, height: 72, borderRadius: "12px 12px 0 0", objectFit: "cover", objectPosition: "top", border: "2px solid rgba(255,255,255,0.4)", boxShadow: "0 0 14px rgba(255,255,255,0.12)" }}/>
+                            </div>
+
+                            {/* Girl 2 — maya.k */}
+                            <div style={{ position: "relative", display: "flex", flexDirection: "column", alignItems: "center" }}>
+                                {/* Tag box */}
+                                <div style={{ position: "relative", background: "rgba(255,255,255,0.92)", borderRadius: 4, padding: "2px 5px", marginBottom: 4, whiteSpace: "nowrap", fontSize: 8, fontWeight: 700, color: "#262626", boxShadow: "0 1px 4px rgba(0,0,0,0.3)" }}>
+                                    @maya.k
+                                    <div style={{ position: "absolute", bottom: -4, left: "50%", transform: "translateX(-50%)", width: 0, height: 0, borderLeft: "4px solid transparent", borderRight: "4px solid transparent", borderTop: "4px solid rgba(255,255,255,0.92)" }}/>
+                                </div>
+                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="maya.k" style={{ width: 46, height: 58, borderRadius: "12px 12px 0 0", objectFit: "cover", objectPosition: "top", border: "2px solid rgba(255,255,255,0.25)" }}/>
+                            </div>
+                        </div>
+                    </div>
 
                     {/* Actions */}
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "6px 12px" }}>
@@ -300,7 +318,8 @@ export default function PhoneDemo() {
 
                         {/* Comment input */}
                         <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 4, paddingTop: 6, borderTop: "1px solid #efefef" }}>
-                            <div style={{ width: 22, height: 22, borderRadius: "50%", background: "linear-gradient(135deg,#667eea,#764ba2)", flexShrink: 0 }}/>
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="you" style={{ width: 22, height: 22, borderRadius: "50%", objectFit: "cover", flexShrink: 0 }}/>
                             <span style={{ color: "#8E8E8E", fontSize: 11 }}>Add a comment…</span>
                         </div>
                     </div>
