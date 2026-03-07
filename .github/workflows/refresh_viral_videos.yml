@@ -1,0 +1,38 @@
+name: Refresh Viral Videos
+
+on:
+  schedule:
+    # Runs on the 1st and 15th of every month at 03:00 UTC (~every 2 weeks)
+    - cron: '0 3 1,15 * *'
+  workflow_dispatch:
+    # Also allows manual trigger from the GitHub Actions tab
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install yt-dlp psycopg2-binary requests
+
+      - name: Verify FFmpeg is available
+        run: ffmpeg -version | head -1
+
+      - name: Run viral video refresh
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          python backend/scripts/refresh_viral_videos.py
