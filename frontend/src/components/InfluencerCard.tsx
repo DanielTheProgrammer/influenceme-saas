@@ -54,6 +54,8 @@ export default function InfluencerCard({ influencer }: { influencer: Influencer 
                         loop
                         muted
                         playsInline
+                        preload="metadata"
+                        poster={influencer.profile_picture_url || undefined}
                         onError={() => setVideoFailed(true)}
                         className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
                     />
