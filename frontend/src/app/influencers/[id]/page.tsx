@@ -8,22 +8,13 @@ import GenAIStudio from "@/components/GenAIStudio";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-const ENGAGEMENT_ICONS: Record<string, string> = {
-    permanent_follow: "👥",
-    timed_follow: "⏱️",
-    story_tag: "🏷️",
-    story_highlight: "🌟",
-    post_tag: "📌",
-    comment: "💬",
-};
-
-const ENGAGEMENT_COLORS: Record<string, string> = {
-    permanent_follow: "from-blue-500 to-blue-600",
-    timed_follow: "from-cyan-500 to-blue-500",
-    story_tag: "from-pink-500 to-rose-500",
-    story_highlight: "from-yellow-400 to-orange-500",
-    post_tag: "from-indigo-500 to-purple-600",
-    comment: "from-green-500 to-teal-500",
+const ENGAGEMENT_LABELS: Record<string, string> = {
+    permanent_follow: "Permanent Follow",
+    timed_follow: "Timed Follow",
+    story_tag: "Story Tag",
+    story_highlight: "Story Highlight",
+    post_tag: "Post Tag",
+    comment: "Comment",
 };
 
 interface Service {
@@ -89,20 +80,18 @@ export default function InfluencerProfilePage({ params }: { params: Promise<{ id
 
     if (loading) {
         return (
-            <div className="max-w-4xl mx-auto">
-                <div className="animate-pulse">
-                    <div className="h-52 bg-gray-200 rounded-2xl mb-0" />
-                    <div className="bg-white rounded-2xl shadow-sm px-8 pb-8 mb-6">
-                        <div className="flex items-end gap-6 -mt-12 mb-6">
-                            <div className="w-28 h-28 rounded-full bg-gray-300 border-4 border-white flex-shrink-0" />
-                            <div className="pb-2 space-y-2 flex-1">
-                                <div className="h-6 bg-gray-200 rounded w-1/3" />
-                                <div className="h-4 bg-gray-200 rounded w-1/4" />
-                            </div>
+            <div className="max-w-4xl mx-auto px-4 pt-24 pb-16 animate-pulse">
+                <div className="h-48 bg-lk-surface rounded-2xl mb-0 border border-lk-border" />
+                <div className="bg-lk-surface rounded-2xl border border-lk-border px-8 pb-8 mb-6">
+                    <div className="flex items-end gap-6 -mt-12 mb-6">
+                        <div className="w-28 h-28 rounded-full bg-lk-border border-4 border-lk-black flex-shrink-0" />
+                        <div className="pb-2 space-y-2 flex-1">
+                            <div className="h-6 bg-lk-border rounded w-1/3" />
+                            <div className="h-4 bg-lk-border rounded w-1/4" />
                         </div>
-                        <div className="h-4 bg-gray-200 rounded mb-2" />
-                        <div className="h-4 bg-gray-200 rounded w-4/5" />
                     </div>
+                    <div className="h-4 bg-lk-border rounded mb-2" />
+                    <div className="h-4 bg-lk-border rounded w-4/5" />
                 </div>
             </div>
         );
@@ -110,12 +99,20 @@ export default function InfluencerProfilePage({ params }: { params: Promise<{ id
 
     if (error || !influencer) {
         return (
-            <div className="max-w-4xl mx-auto py-20 text-center">
+            <div className="max-w-4xl mx-auto py-20 text-center pt-24">
                 <p className="text-5xl mb-4">😔</p>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Influencer not found</h2>
-                <p className="text-gray-500 mb-6">{error || "This profile doesn't exist or has been removed."}</p>
-                <button onClick={() => router.push("/browse")} className="px-6 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors">
-                    Browse Influencers
+                <h2
+                    className="text-2xl font-bold text-lk-white mb-2"
+                    style={{ fontFamily: "var(--font-syne)" }}
+                >
+                    Creator not found
+                </h2>
+                <p className="text-lk-muted mb-6">{error || "This profile doesn't exist or has been removed."}</p>
+                <button
+                    onClick={() => router.push("/browse")}
+                    className="px-6 py-3 bg-lk-amber text-lk-black font-bold rounded-full hover:brightness-110 transition-all"
+                >
+                    Browse Creators
                 </button>
             </div>
         );
@@ -129,36 +126,40 @@ export default function InfluencerProfilePage({ params }: { params: Promise<{ id
     const posts = influencer.recent_post_urls?.filter(Boolean) ?? [];
 
     return (
-        <div className="max-w-4xl mx-auto pb-16">
+        <div className="max-w-4xl mx-auto px-4 pb-16 pt-24">
 
             {/* Hero Banner */}
             <div
-                className="h-52 rounded-2xl mb-0 bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 relative overflow-hidden"
+                className="h-48 rounded-2xl mb-0 relative overflow-hidden bg-lk-surface border border-lk-border"
                 style={influencer.profile_picture_url ? {
-                    backgroundImage: `linear-gradient(to bottom right, rgba(99,102,241,0.85), rgba(168,85,247,0.85)), url(${influencer.profile_picture_url})`,
+                    backgroundImage: `linear-gradient(to bottom right, rgba(7,7,15,0.8), rgba(14,14,26,0.7)), url(${influencer.profile_picture_url})`,
                     backgroundSize: "cover",
                     backgroundPosition: "center",
                 } : {}}
             >
-                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.15),_transparent_60%)]" />
+                {/* Amber glow */}
+                <div className="absolute inset-0 pointer-events-none"
+                    style={{ background: "radial-gradient(ellipse at bottom right, rgba(240,165,0,0.08) 0%, transparent 60%)" }} />
             </div>
 
             {/* Profile Card */}
-            <div className="bg-white rounded-2xl shadow-sm px-6 md:px-10 pb-8 mb-6">
+            <div className="bg-lk-surface rounded-2xl border border-lk-border px-6 md:px-10 pb-8 mb-6">
+                <div className="h-[2px] bg-gradient-to-r from-lk-amber via-lk-cyan to-transparent" />
+
                 {/* Avatar + Name Row */}
-                <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-14 mb-6">
+                <div className="flex flex-col md:flex-row md:items-end gap-4 -mt-14 pt-2 mb-6">
                     <div className="relative flex-shrink-0">
                         <Image
                             src={influencer.profile_picture_url || `https://i.pravatar.cc/200?u=${influencer.id}`}
                             alt={influencer.display_name}
                             width={112}
                             height={112}
-                            className="w-28 h-28 rounded-full border-4 border-white shadow-lg object-cover"
+                            className="w-28 h-28 rounded-full border-4 border-lk-black shadow-xl object-cover"
                             unoptimized
                         />
                         {isVerified && (
-                            <div className="absolute bottom-1 right-1 w-7 h-7 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white shadow" title="Verified">
-                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <div className="absolute bottom-1 right-1 w-7 h-7 bg-lk-cyan rounded-full flex items-center justify-center border-2 border-lk-black shadow" title="Verified">
+                                <svg className="w-4 h-4 text-lk-black" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414L8.414 15l-4.121-4.121a1 1 0 011.414-1.414L8.414 12.172l7.879-7.879a1 1 0 011.414 0z" clipRule="evenodd" />
                                 </svg>
                             </div>
@@ -167,22 +168,26 @@ export default function InfluencerProfilePage({ params }: { params: Promise<{ id
 
                     <div className="flex-1 md:pb-2">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
-                            <h1 className="text-2xl md:text-3xl font-extrabold text-gray-900">{influencer.display_name}</h1>
+                            <h1
+                                className="text-2xl md:text-3xl font-extrabold text-lk-white"
+                                style={{ fontFamily: "var(--font-syne)" }}
+                            >
+                                {influencer.display_name}
+                            </h1>
                             {isVerified && (
-                                <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-xs font-bold rounded-full border border-blue-100">
+                                <span className="px-2 py-0.5 bg-lk-cyan/15 text-lk-cyan text-xs font-bold rounded-full border border-lk-cyan/20">
                                     Verified
                                 </span>
                             )}
                         </div>
 
-                        {/* Social Handles */}
                         <div className="flex flex-wrap gap-3 text-sm">
                             {influencer.instagram_handle && (
                                 <a
                                     href={`https://www.instagram.com/${influencer.instagram_handle}/`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-1.5 text-gray-500 hover:text-pink-600 transition-colors"
+                                    className="flex items-center gap-1.5 text-lk-muted hover:text-lk-white transition-colors"
                                 >
                                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                                         <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
@@ -197,7 +202,7 @@ export default function InfluencerProfilePage({ params }: { params: Promise<{ id
                                     href={`https://www.tiktok.com/@${influencer.tiktok_handle}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-1.5 text-gray-500 hover:text-black transition-colors"
+                                    className="flex items-center gap-1.5 text-lk-muted hover:text-lk-white transition-colors"
                                 >
                                     <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                                         <path d="M19.59 6.69a4.83 4.83 0 01-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 01-2.88 2.5 2.89 2.89 0 01-2.89-2.89 2.89 2.89 0 012.89-2.89c.28 0 .54.04.79.1V9.01a6.33 6.33 0 00-.79-.05 6.34 6.34 0 00-6.34 6.34 6.34 6.34 0 006.34 6.34 6.34 6.34 0 006.33-6.34V8.69a8.27 8.27 0 004.83 1.56V6.79a4.85 4.85 0 01-1.06-.1z" />
@@ -208,61 +213,72 @@ export default function InfluencerProfilePage({ params }: { params: Promise<{ id
                         </div>
                     </div>
 
-                    {/* CTA */}
                     {influencer.services.length > 0 && (
                         <div className="md:pb-2 flex-shrink-0">
                             <button
                                 onClick={() => {
-                                    const el = document.getElementById("services");
-                                    el?.scrollIntoView({ behavior: "smooth" });
+                                    document.getElementById("services")?.scrollIntoView({ behavior: "smooth" });
                                 }}
-                                className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold rounded-xl hover:opacity-90 transition-opacity shadow-md text-sm"
+                                className="px-6 py-2.5 bg-lk-amber text-lk-black font-bold rounded-full hover:brightness-110 transition-all text-sm tracking-wide"
                             >
-                                Book Engagement →
+                                Get Social Proof →
                             </button>
                         </div>
                     )}
                 </div>
 
                 {/* Stats Bar */}
-                <div className="flex flex-wrap gap-6 mb-6 py-4 border-y border-gray-100">
+                <div className="flex flex-wrap gap-8 mb-6 py-4 border-y border-lk-border">
                     {influencer.followers_count != null && (
-                        <div className="text-center">
-                            <p className="text-xl font-extrabold text-gray-900">{formatFollowers(influencer.followers_count)}</p>
-                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Followers</p>
+                        <div>
+                            <p
+                                className="text-xl font-extrabold text-lk-white"
+                                style={{ fontFamily: "var(--font-syne)" }}
+                            >
+                                {formatFollowers(influencer.followers_count)}
+                            </p>
+                            <p className="text-[10px] text-lk-muted font-semibold uppercase tracking-widest mt-0.5">Followers</p>
                         </div>
                     )}
-                    <div className="text-center">
-                        <p className="text-xl font-extrabold text-gray-900">{influencer.services.length}</p>
-                        <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Services</p>
+                    <div>
+                        <p className="text-xl font-extrabold text-lk-white" style={{ fontFamily: "var(--font-syne)" }}>
+                            {influencer.services.length}
+                        </p>
+                        <p className="text-[10px] text-lk-muted font-semibold uppercase tracking-widest mt-0.5">Services</p>
                     </div>
                     {minPrice != null && (
-                        <div className="text-center">
-                            <p className="text-xl font-extrabold text-gray-900">from ${minPrice.toFixed(0)}</p>
-                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Starting Price</p>
+                        <div>
+                            <p className="text-xl font-extrabold text-lk-amber" style={{ fontFamily: "var(--font-syne)" }}>
+                                from ${minPrice.toFixed(0)}
+                            </p>
+                            <p className="text-[10px] text-lk-muted font-semibold uppercase tracking-widest mt-0.5">Starting Price</p>
                         </div>
                     )}
                     {posts.length > 0 && (
-                        <div className="text-center">
-                            <p className="text-xl font-extrabold text-gray-900">{posts.length}</p>
-                            <p className="text-xs text-gray-400 font-medium uppercase tracking-wide">Recent Posts</p>
+                        <div>
+                            <p className="text-xl font-extrabold text-lk-white" style={{ fontFamily: "var(--font-syne)" }}>{posts.length}</p>
+                            <p className="text-[10px] text-lk-muted font-semibold uppercase tracking-widest mt-0.5">Recent Posts</p>
                         </div>
                     )}
                 </div>
 
-                {/* Bio */}
                 {influencer.bio && (
-                    <p className="text-gray-600 leading-relaxed">{influencer.bio}</p>
+                    <p className="text-lk-muted-bright leading-relaxed text-sm">{influencer.bio}</p>
                 )}
             </div>
 
             {/* Recent Posts */}
             {posts.length > 0 && (
-                <div className="bg-white rounded-2xl shadow-sm p-6 mb-6">
-                    <h2 className="text-lg font-bold text-gray-900 mb-4">Recent Posts</h2>
+                <div className="bg-lk-surface rounded-2xl border border-lk-border p-6 mb-6">
+                    <h2
+                        className="text-lg font-bold text-lk-white mb-4"
+                        style={{ fontFamily: "var(--font-syne)" }}
+                    >
+                        Recent Posts
+                    </h2>
                     <div className="grid grid-cols-3 gap-2">
                         {posts.map((url, i) => (
-                            <div key={i} className="aspect-square rounded-xl overflow-hidden bg-gray-100 group relative">
+                            <div key={i} className="aspect-square rounded-xl overflow-hidden bg-lk-border group relative">
                                 {/* eslint-disable-next-line @next/next/no-img-element */}
                                 <img
                                     src={url}
@@ -273,7 +289,6 @@ export default function InfluencerProfilePage({ params }: { params: Promise<{ id
                                         (e.target as HTMLImageElement).src = `https://picsum.photos/seed/${influencer.id + i}/400/400`;
                                     }}
                                 />
-                                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 rounded-xl" />
                             </div>
                         ))}
                     </div>
@@ -282,73 +297,76 @@ export default function InfluencerProfilePage({ params }: { params: Promise<{ id
 
             {/* Services */}
             <div id="services">
-                <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-bold text-gray-900">Available Engagements</h2>
+                <div className="flex items-center justify-between mb-5">
+                    <h2
+                        className="text-xl font-bold text-lk-white"
+                        style={{ fontFamily: "var(--font-syne)" }}
+                    >
+                        Available Proof Types
+                    </h2>
                     {!session && (
-                        <p className="text-sm text-gray-400">Sign in to book</p>
+                        <p className="text-sm text-lk-muted">Sign in to book</p>
                     )}
                 </div>
 
                 {influencer.services.length === 0 ? (
-                    <div className="bg-white rounded-2xl shadow-sm p-10 text-center">
-                        <p className="text-gray-400">No services listed yet.</p>
+                    <div className="bg-lk-surface rounded-2xl border border-lk-border p-10 text-center">
+                        <p className="text-lk-muted">No services listed yet.</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {influencer.services.map((service) => {
-                            const gradient = ENGAGEMENT_COLORS[service.engagement_type] || "from-gray-400 to-gray-500";
-                            const icon = ENGAGEMENT_ICONS[service.engagement_type] || "⭐";
-                            return (
-                                <div
-                                    key={service.id}
-                                    onClick={() => handleServiceSelect(service)}
-                                    className="bg-white border border-gray-100 rounded-2xl overflow-hidden shadow-sm hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group"
-                                >
-                                    {/* Color header strip */}
-                                    <div className={`h-2 w-full bg-gradient-to-r ${gradient}`} />
-
-                                    <div className="p-5">
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-2xl">{icon}</span>
-                                                <div>
-                                                    <h3 className="font-bold text-gray-900 capitalize leading-tight">
-                                                        {service.engagement_type.replace(/_/g, " ")}
-                                                    </h3>
-                                                    {service.duration_days && (
-                                                        <p className="text-xs text-gray-400 mt-0.5">{service.duration_days}-day engagement</p>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <div className="text-right flex-shrink-0">
-                                                <p className="text-2xl font-extrabold text-gray-900">${service.price.toFixed(0)}</p>
-                                                <p className="text-xs text-gray-400">per request</p>
-                                            </div>
+                        {influencer.services.map((service) => (
+                            <div
+                                key={service.id}
+                                onClick={() => handleServiceSelect(service)}
+                                className="bg-lk-surface border border-lk-border rounded-2xl overflow-hidden hover:border-lk-amber/40 hover:-translate-y-0.5 transition-all duration-200 cursor-pointer group"
+                            >
+                                <div className="h-[2px] bg-gradient-to-r from-lk-amber via-lk-cyan to-transparent" />
+                                <div className="p-5">
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div>
+                                            <h3
+                                                className="font-bold text-lk-white capitalize leading-tight group-hover:text-lk-amber transition-colors"
+                                                style={{ fontFamily: "var(--font-syne)" }}
+                                            >
+                                                {ENGAGEMENT_LABELS[service.engagement_type] || service.engagement_type.replace(/_/g, " ")}
+                                            </h3>
+                                            {service.duration_days && (
+                                                <p className="text-xs text-lk-muted mt-0.5">{service.duration_days}-day engagement</p>
+                                            )}
                                         </div>
-
-                                        {service.description && (
-                                            <p className="text-sm text-gray-500 mb-4 leading-relaxed">{service.description}</p>
-                                        )}
-
-                                        <div className={`w-full py-2.5 rounded-xl text-sm font-bold text-center bg-gradient-to-r ${gradient} text-white opacity-90 group-hover:opacity-100 transition-opacity`}>
-                                            {session ? "Select & Customize with AI ✨" : "Sign in to Book"}
+                                        <div className="text-right flex-shrink-0">
+                                            <p
+                                                className="text-2xl font-extrabold text-lk-amber"
+                                                style={{ fontFamily: "var(--font-syne)" }}
+                                            >
+                                                ${service.price.toFixed(0)}
+                                            </p>
+                                            <p className="text-xs text-lk-muted">per request</p>
                                         </div>
                                     </div>
+
+                                    {service.description && (
+                                        <p className="text-sm text-lk-muted mb-4 leading-relaxed">{service.description}</p>
+                                    )}
+
+                                    <div className="w-full py-2.5 rounded-full text-sm font-bold text-center bg-lk-amber/10 text-lk-amber border border-lk-amber/20 group-hover:bg-lk-amber group-hover:text-lk-black transition-all">
+                                        {session ? "Select & Customize with AI ✨" : "Sign in to Book"}
+                                    </div>
                                 </div>
-                            );
-                        })}
+                            </div>
+                        ))}
                     </div>
                 )}
             </div>
 
-            {/* Trust footer */}
-            <div className="mt-8 flex flex-wrap justify-center gap-6 text-sm text-gray-400">
-                <span className="flex items-center gap-1.5">🔒 Secure escrow payments</span>
+            {/* Trust strip */}
+            <div className="mt-10 flex flex-wrap justify-center gap-6 text-xs text-lk-muted">
+                <span className="flex items-center gap-1.5">🔒 Secure escrow</span>
                 <span className="flex items-center gap-1.5">✨ AI-powered preview</span>
-                <span className="flex items-center gap-1.5">✅ Fulfillment verified</span>
+                <span className="flex items-center gap-1.5">✅ Proof verified</span>
             </div>
 
-            {/* GenAI Studio Modal */}
             {selectedService && (
                 <GenAIStudio
                     influencerId={influencer.id}

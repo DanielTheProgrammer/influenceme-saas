@@ -8,8 +8,8 @@ import Image from "next/image";
 import toast from "react-hot-toast";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const COMPANY_INSTAGRAM = "influenceme.app";
-const COMPANY_TIKTOK = "influenceme.app";
+const COMPANY_INSTAGRAM = "leaky.app";
+const COMPANY_TIKTOK = "leaky.app";
 
 interface EngagementRequest {
     id: number;
@@ -254,49 +254,49 @@ export default function InfluencerDashboard() {
 
     if (status === "loading" || loading) {
         return (
-            <div className="max-w-5xl mx-auto px-4 py-8 animate-pulse">
-                <div className="h-9 w-64 bg-gray-200 rounded-lg mb-8" />
+            <div className="max-w-5xl mx-auto px-4 py-8 pt-24 animate-pulse">
+                <div className="h-9 w-64 bg-lk-border rounded-lg mb-8" />
                 {/* Verification panels skeleton */}
                 <div className="mb-8">
-                    <div className="h-6 w-48 bg-gray-200 rounded mb-4" />
+                    <div className="h-6 w-48 bg-lk-border rounded mb-4" />
                     <div className="grid md:grid-cols-2 gap-4">
                         {[1, 2].map(i => (
-                            <div key={i} className="bg-white rounded-xl border border-gray-100 p-6">
+                            <div key={i} className="bg-lk-surface rounded-xl border border-lk-border p-6">
                                 <div className="flex items-center justify-between mb-4">
                                     <div className="flex items-center gap-2">
                                         <div className="w-5 h-5 bg-gray-200 rounded" />
-                                        <div className="h-4 w-24 bg-gray-200 rounded" />
+                                        <div className="h-4 w-24 bg-lk-border rounded" />
                                     </div>
-                                    <div className="h-5 w-16 bg-gray-200 rounded-full" />
+                                    <div className="h-5 w-16 bg-lk-border rounded-full" />
                                 </div>
-                                <div className="h-4 w-3/4 bg-gray-200 rounded mb-3" />
-                                <div className="h-9 w-full bg-gray-200 rounded-lg" />
+                                <div className="h-4 w-3/4 bg-lk-border rounded mb-3" />
+                                <div className="h-9 w-full bg-lk-border rounded-lg" />
                             </div>
                         ))}
                     </div>
                 </div>
                 {/* Requests skeleton */}
-                <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                    <div className="p-6 border-b border-gray-200">
+                <div className="bg-lk-surface rounded-xl border border-lk-border overflow-hidden">
+                    <div className="p-6 border-b border-lk-border">
                         <div className="h-6 w-48 bg-gray-200 rounded" />
                     </div>
                     <div className="divide-y divide-gray-100">
                         {[1, 2, 3].map(i => (
                             <div key={i} className="p-6 flex gap-6">
-                                <div className="w-32 h-32 bg-gray-200 rounded-lg flex-shrink-0" />
+                                <div className="w-32 h-32 bg-lk-border rounded-lg flex-shrink-0" />
                                 <div className="flex-1 space-y-3">
                                     <div className="flex justify-between">
-                                        <div className="h-5 w-24 bg-gray-200 rounded" />
-                                        <div className="h-5 w-20 bg-gray-200 rounded-full" />
+                                        <div className="h-5 w-24 bg-lk-border rounded" />
+                                        <div className="h-5 w-20 bg-lk-border rounded-full" />
                                     </div>
-                                    <div className="h-4 w-48 bg-gray-200 rounded" />
-                                    <div className="h-4 w-32 bg-gray-200 rounded" />
-                                    <div className="h-3 w-40 bg-gray-100 rounded" />
+                                    <div className="h-4 w-48 bg-lk-border rounded" />
+                                    <div className="h-4 w-32 bg-lk-border rounded" />
+                                    <div className="h-3 w-40 bg-lk-border rounded" />
                                 </div>
                                 <div className="flex flex-col gap-2 w-28">
-                                    <div className="h-9 bg-gray-200 rounded-lg" />
-                                    <div className="h-9 bg-gray-100 rounded-lg" />
-                                    <div className="h-9 bg-gray-100 rounded-lg" />
+                                    <div className="h-9 bg-lk-border rounded-lg" />
+                                    <div className="h-9 bg-lk-border rounded-lg" />
+                                    <div className="h-9 bg-lk-border rounded-lg" />
                                 </div>
                             </div>
                         ))}
@@ -312,15 +312,15 @@ export default function InfluencerDashboard() {
 
     if (noProfile) {
         return (
-            <div className="max-w-2xl mx-auto py-16 text-center">
+            <div className="max-w-2xl mx-auto py-16 pt-24 text-center">
                 <div className="text-6xl mb-4">👤</div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Set up your profile first</h1>
-                <p className="text-gray-500 mb-6">
+                <h1 className="text-2xl font-bold text-lk-white mb-2">Set up your profile first</h1>
+                <p className="text-lk-muted mb-6">
                     Create your influencer profile and add services before you can receive fan requests.
                 </p>
                 <Link
                     href="/influencer"
-                    className="inline-block px-6 py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors"
+                    className="inline-block px-6 py-3 bg-lk-amber text-lk-black font-bold rounded-full hover:brightness-110 transition-all"
                 >
                     Create Profile
                 </Link>
@@ -352,32 +352,32 @@ export default function InfluencerDashboard() {
         const dmMessage = encodeURIComponent(`Verification: ${code}`);
 
         return (
-            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+            <div className="bg-lk-surface rounded-xl border border-lk-border p-6">
                 <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
                         {icon}
-                        <span className="font-bold text-gray-900 capitalize">{platform}</span>
-                        <span className="text-gray-500 text-sm">@{handle}</span>
+                        <span className="font-bold text-lk-white capitalize">{platform}</span>
+                        <span className="text-lk-muted text-sm">@{handle}</span>
                     </div>
                     <VerificationBadge status={status} />
                 </div>
 
                 {status === "verified" ? (
-                    <p className="text-green-600 text-sm">Your {platform} account is verified.</p>
+                    <p className="text-lk-cyan text-sm">Your {platform} account is verified.</p>
                 ) : status === "pending" ? (
-                    <p className="text-yellow-700 text-sm">We received your DM request and will verify it shortly. Check back later.</p>
+                    <p className="text-yellow-400 text-sm">We received your DM request and will verify it shortly. Check back later.</p>
                 ) : (
                     <>
-                        <p className="text-gray-600 text-sm mb-4">
+                        <p className="text-lk-muted text-sm mb-4">
                             To verify your {platform} account, send a DM to our official {platform} profile with the code below.
                         </p>
                         <div className="flex items-center gap-2 mb-4">
-                            <div className="flex-1 bg-gray-50 border border-gray-200 rounded-lg px-4 py-2 font-mono text-sm font-bold tracking-widest text-gray-800">
+                            <div className="flex-1 bg-lk-black border border-lk-border rounded-xl px-4 py-2 font-mono text-sm font-bold tracking-widest text-lk-amber">
                                 {code || "Loading..."}
                             </div>
                             <button
                                 onClick={() => copyCode(code)}
-                                className="px-3 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-sm font-medium transition-colors"
+                                className="px-3 py-2 bg-lk-surface border border-lk-border hover:border-lk-border-bright text-lk-muted-bright rounded-xl text-sm font-medium transition-colors"
                             >
                                 {copiedCode ? "Copied!" : "Copy"}
                             </button>
@@ -387,13 +387,13 @@ export default function InfluencerDashboard() {
                                 href={`${dmUrl}?text=${dmMessage}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="flex-1 text-center px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                className="flex-1 text-center px-4 py-2 bg-lk-amber text-lk-black font-bold rounded-full hover:brightness-110 transition-all text-sm"
                             >
                                 Open DM
                             </a>
                             <button
                                 onClick={() => submitVerification(platform)}
-                                className="flex-1 px-4 py-2 bg-gray-900 text-white font-bold rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                                className="flex-1 px-4 py-2 bg-lk-surface-2 border border-lk-border text-lk-white font-bold rounded-full hover:border-lk-border-bright transition-all text-sm"
                             >
                                 I&apos;ve sent the DM
                             </button>
@@ -405,13 +405,13 @@ export default function InfluencerDashboard() {
     };
 
     return (
-        <div className="max-w-5xl mx-auto px-4 py-8">
-            <h1 className="text-3xl font-bold mb-8">Influencer Dashboard</h1>
+        <div className="max-w-5xl mx-auto px-4 py-8 pt-24">
+            <h1 className="text-3xl font-bold mb-8 text-lk-white">Creator Dashboard</h1>
 
             {/* Social Verification Panels */}
             {profile && (profile.instagram_handle || profile.tiktok_handle) && (
                 <div className="mb-8">
-                    <h2 className="text-xl font-bold mb-4">Social Verification</h2>
+                    <h2 className="text-xl font-bold mb-4 text-lk-white">Social Verification</h2>
                     <div className="grid md:grid-cols-2 gap-4">
                         <VerificationPanel
                             platform="instagram"
@@ -441,49 +441,49 @@ export default function InfluencerDashboard() {
                 </div>
             )}
 
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-                <div className="p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-bold">Incoming Fan Requests</h2>
+            <div className="bg-lk-surface rounded-xl border border-lk-border overflow-hidden">
+                <div className="p-6 border-b border-lk-border">
+                    <h2 className="text-xl font-bold text-lk-white">Incoming Fan Requests</h2>
                 </div>
 
-                <div className="divide-y divide-gray-200">
+                <div className="divide-y divide-lk-border">
                     {requests.length === 0 ? (
-                        <div className="p-8 text-center text-gray-500">No requests yet!</div>
+                        <div className="p-8 text-center text-lk-muted">No requests yet!</div>
                     ) : (
                         requests.map((request) => (
-                            <div key={request.id} className="p-6 flex flex-col md:flex-row gap-6 items-center hover:bg-gray-50 transition-colors">
+                            <div key={request.id} className="p-6 flex flex-col md:flex-row gap-6 items-center hover:bg-lk-surface-2 transition-colors">
                                 {/* Preview Image */}
-                                <div className="w-32 h-32 flex-shrink-0 bg-gray-100 rounded-lg overflow-hidden flex items-center justify-center border">
+                                <div className="w-32 h-32 flex-shrink-0 bg-lk-black rounded-lg overflow-hidden flex items-center justify-center border border-lk-border">
                                     {request.generated_image_preview_url ? (
                                         <Image src={request.generated_image_preview_url} alt="Preview" width={128} height={128} className="w-full h-full object-cover" unoptimized />
                                     ) : (
-                                        <span className="text-gray-400 text-sm">No Image</span>
+                                        <span className="text-lk-muted text-sm">No Image</span>
                                     )}
                                 </div>
 
                                 {/* Request Details */}
                                 <div className="flex-1">
                                     <div className="flex justify-between items-start mb-2">
-                                        <h3 className="text-lg font-bold">Fan #{request.fan_id}</h3>
+                                        <h3 className="text-lg font-bold text-lk-white">Fan #{request.fan_id}</h3>
                                         <span className={`px-3 py-1 rounded-full text-xs font-bold ${
-                                            request.status === "pending" ? "bg-yellow-100 text-yellow-800" :
-                                            request.status === "approved" ? "bg-green-100 text-green-800" :
-                                            request.status === "rejected" ? "bg-red-100 text-red-800" :
-                                            request.status === "counter_offered" ? "bg-purple-100 text-purple-800" :
-                                            "bg-gray-100 text-gray-800"
+                                            request.status === "pending" ? "bg-yellow-500/15 text-yellow-400" :
+                                            request.status === "approved" ? "bg-lk-cyan/15 text-lk-cyan" :
+                                            request.status === "rejected" ? "bg-rose-500/15 text-rose-400" :
+                                            request.status === "counter_offered" ? "bg-lk-amber/15 text-lk-amber" :
+                                            "bg-lk-border text-lk-muted"
                                         }`}>
                                             {request.status.replace(/_/g, " ").toUpperCase()}
                                         </span>
                                     </div>
-                                    <p className="text-gray-600 mb-1">
+                                    <p className="text-lk-muted-bright mb-1">
                                         <strong>Service:</strong> {request.service.engagement_type.replace(/_/g, " ")}
                                     </p>
-                                    <p className="text-gray-600 mb-1">
+                                    <p className="text-lk-muted-bright mb-1">
                                         <strong>Price:</strong>{" "}
                                         <span className="text-green-600 font-bold">${request.service.price.toFixed(2)}</span>
                                     </p>
                                     {request.status === "counter_offered" && request.counter_offer_price && (
-                                        <p className="text-purple-600 mb-1">
+                                        <p className="text-lk-muted-bright mb-1">
                                             <strong>Your Counter:</strong> ${request.counter_offer_price.toFixed(2)} — {request.counter_offer_description}
                                         </p>
                                     )}
@@ -492,7 +492,7 @@ export default function InfluencerDashboard() {
                                             <strong>Reason:</strong> {request.rejection_reason}
                                         </p>
                                     )}
-                                    <p className="text-gray-400 text-sm">
+                                    <p className="text-lk-muted text-sm">
                                         {new Date(request.created_at).toLocaleString()}
                                     </p>
                                 </div>
@@ -502,19 +502,19 @@ export default function InfluencerDashboard() {
                                     <div className="flex flex-col gap-2 w-full md:w-auto">
                                         <button
                                             onClick={() => handleAction(request.id, "approved")}
-                                            className="px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 transition-colors"
+                                            className="px-6 py-2 bg-lk-cyan text-lk-black font-bold rounded-full hover:brightness-110 transition-colors"
                                         >
                                             Approve
                                         </button>
                                         <button
                                             onClick={() => openCounterOfferForm(request.id)}
-                                            className="px-6 py-2 bg-blue-100 text-blue-600 font-bold rounded-lg hover:bg-blue-200 transition-colors"
+                                            className="px-6 py-2 bg-lk-amber/15 text-lk-amber font-bold rounded-full hover:bg-lk-amber/25 transition-colors"
                                         >
                                             Counter-Offer
                                         </button>
                                         <button
                                             onClick={() => openRejectModal(request.id)}
-                                            className="px-6 py-2 bg-red-100 text-red-600 font-bold rounded-lg hover:bg-red-200 transition-colors"
+                                            className="px-6 py-2 bg-rose-500/15 text-rose-400 font-bold rounded-full hover:bg-rose-500/25 transition-colors"
                                         >
                                             Reject
                                         </button>
@@ -522,10 +522,10 @@ export default function InfluencerDashboard() {
                                 )}
                                 {request.status === "approved" && (
                                     <div className="flex flex-col gap-2 w-full md:w-auto">
-                                        <p className="text-green-700 text-sm font-medium text-center">Ready to fulfill</p>
+                                        <p className="text-lk-cyan text-sm font-medium text-center">Ready to fulfill</p>
                                         <button
                                             onClick={() => openFulfillModal(request.id)}
-                                            className="px-6 py-2 bg-violet-600 text-white font-bold rounded-lg hover:bg-violet-700 transition-colors"
+                                            className="px-6 py-2 bg-lk-amber text-lk-black font-bold rounded-full hover:brightness-110 transition-colors"
                                         >
                                             Mark as Fulfilled
                                         </button>
@@ -539,12 +539,12 @@ export default function InfluencerDashboard() {
 
             {/* Reject Modal */}
             {showRejectModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-                        <h2 className="text-2xl font-bold mb-4">Reject Request</h2>
-                        <p className="text-gray-600 mb-4">Please provide a reason for rejection.</p>
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-lk-surface border border-lk-border rounded-2xl max-w-md w-full p-6">
+                        <h2 className="text-2xl font-bold text-lk-white mb-4">Reject Request</h2>
+                        <p className="text-lk-muted mb-4">Please provide a reason for rejection.</p>
                         <textarea
-                            className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-red-500 outline-none mb-4"
+                            className="w-full bg-lk-black border border-lk-border rounded-xl p-3 text-lk-white focus:border-rose-500/50 focus:outline-none mb-4"
                             rows={4}
                             value={rejectionReason}
                             onChange={(e) => setRejectionReason(e.target.value)}
@@ -553,13 +553,13 @@ export default function InfluencerDashboard() {
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => setShowRejectModal(false)}
-                                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition-colors"
+                                className="px-4 py-2 border border-lk-border text-lk-muted-bright rounded-full font-bold hover:border-lk-border-bright transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={submitReject}
-                                className="px-4 py-2 bg-red-600 text-white rounded-lg font-bold hover:bg-red-700 transition-colors"
+                                className="px-4 py-2 bg-rose-500 text-white rounded-full font-bold hover:bg-rose-600 transition-colors"
                             >
                                 Reject Request
                             </button>
@@ -570,27 +570,27 @@ export default function InfluencerDashboard() {
 
             {/* Fulfill Modal */}
             {showFulfillModal && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-                        <h2 className="text-2xl font-bold mb-2">Mark as Fulfilled</h2>
-                        <p className="text-gray-600 mb-4 text-sm">
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-lk-surface border border-lk-border rounded-2xl max-w-md w-full p-6">
+                        <h2 className="text-2xl font-bold text-lk-white mb-2">Mark as Fulfilled</h2>
+                        <p className="text-lk-muted mb-4 text-sm">
                             Provide a link to proof of fulfillment (screenshot, post URL, story URL). The fan will review this before releasing payment.
                         </p>
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">Proof URL *</label>
+                            <label className="block text-xs font-semibold text-lk-muted-bright uppercase tracking-wider mb-1.5">Proof URL *</label>
                             <input
                                 type="url"
-                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-violet-500 outline-none"
+                                className="w-full bg-lk-black border border-lk-border rounded-xl p-3 text-lk-white focus:border-lk-amber/50 focus:outline-none"
                                 value={proofUrl}
                                 onChange={(e) => setProofUrl(e.target.value)}
                                 placeholder="https://www.instagram.com/p/... or screenshot link"
                             />
-                            <p className="text-xs text-gray-400 mt-1">Link to the post, story, or screenshot showing you completed the engagement.</p>
+                            <p className="text-xs text-lk-muted mt-1">Link to the post, story, or screenshot showing you completed the engagement.</p>
                         </div>
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => setShowFulfillModal(false)}
-                                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition-colors"
+                                className="px-4 py-2 border border-lk-border text-lk-muted-bright rounded-full font-bold hover:border-lk-border-bright transition-colors"
                             >
                                 Cancel
                             </button>
@@ -608,15 +608,15 @@ export default function InfluencerDashboard() {
 
             {/* Counter-Offer Modal */}
             {showCounterOfferForm && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                    <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
-                        <h2 className="text-2xl font-bold mb-4">Make a Counter-Offer</h2>
-                        <p className="text-gray-600 mb-4">Propose a new price and description.</p>
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-lk-surface border border-lk-border rounded-2xl max-w-md w-full p-6">
+                        <h2 className="text-2xl font-bold text-lk-white mb-4">Make a Counter-Offer</h2>
+                        <p className="text-lk-muted mb-4">Propose a new price and description.</p>
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">New Price ($)</label>
+                            <label className="block text-xs font-semibold text-lk-muted-bright uppercase tracking-wider mb-1.5">New Price ($)</label>
                             <input
                                 type="number"
-                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                                className="w-full bg-lk-black border border-lk-border rounded-xl p-3 text-lk-white focus:border-lk-amber/50 focus:outline-none"
                                 value={newCounterPrice}
                                 onChange={(e) => setNewCounterPrice(e.target.value)}
                                 step="0.01"
@@ -624,9 +624,9 @@ export default function InfluencerDashboard() {
                             />
                         </div>
                         <div className="mb-4">
-                            <label className="block text-sm font-medium text-gray-700 mb-1">New Description</label>
+                            <label className="block text-xs font-semibold text-lk-muted-bright uppercase tracking-wider mb-1.5">New Description</label>
                             <textarea
-                                className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                                className="w-full bg-lk-black border border-lk-border rounded-xl p-3 text-lk-white focus:border-lk-amber/50 focus:outline-none"
                                 rows={4}
                                 value={newCounterDescription}
                                 onChange={(e) => setNewCounterDescription(e.target.value)}
@@ -636,13 +636,13 @@ export default function InfluencerDashboard() {
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => setShowCounterOfferForm(false)}
-                                className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-bold hover:bg-gray-300 transition-colors"
+                                className="px-4 py-2 border border-lk-border text-lk-muted-bright rounded-full font-bold hover:border-lk-border-bright transition-colors"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={submitCounterOffer}
-                                className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold hover:bg-blue-700 transition-colors"
+                                className="px-4 py-2 bg-lk-amber text-lk-black rounded-full font-bold hover:brightness-110 transition-colors"
                             >
                                 Submit Counter-Offer
                             </button>

@@ -18,7 +18,7 @@ function getPasswordStrength(password: string): { score: number; label: string; 
     if (score <= 1) return { score, label: "Weak", color: "bg-rose-500" };
     if (score <= 2) return { score, label: "Fair", color: "bg-orange-400" };
     if (score <= 3) return { score, label: "Good", color: "bg-yellow-400" };
-    return { score, label: "Strong", color: "bg-green-500" };
+    return { score, label: "Strong", color: "bg-lk-cyan" };
 }
 
 export default function RegisterPage() {
@@ -53,7 +53,6 @@ export default function RegisterPage() {
                 throw new Error(data.detail || "Registration failed.");
             }
 
-            // Redirect to login with registered flag — login will redirect to onboarding
             router.push(`/login?registered=1&role=${role}`);
         } catch (err: any) {
             setError(err.message);
@@ -63,23 +62,31 @@ export default function RegisterPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-            <div className="max-w-md w-full bg-white rounded-2xl shadow-md p-8">
+        <div className="min-h-screen flex items-center justify-center bg-lk-black py-12 px-4 pt-24">
+            <div className="max-w-md w-full bg-lk-surface border border-lk-border rounded-2xl p-8">
                 <div className="text-center mb-8">
-                    <Link href="/" className="text-2xl font-extrabold text-violet-600">InfluenceMe</Link>
-                    <h1 className="text-2xl font-bold text-gray-900 mt-3">Create account</h1>
-                    <p className="text-gray-500 mt-1 text-sm">Join the marketplace today</p>
+                    <Link
+                        href="/"
+                        className="text-2xl font-black text-lk-amber tracking-[-0.04em] block mb-6"
+                        style={{ fontFamily: "var(--font-syne)" }}
+                    >
+                        LEAKY
+                    </Link>
+                    <h1 className="text-2xl font-bold text-lk-white" style={{ fontFamily: "var(--font-syne)" }}>
+                        Create account
+                    </h1>
+                    <p className="text-lk-muted mt-1.5 text-sm">Join the marketplace today</p>
                 </div>
 
                 {error && (
-                    <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-sm">
+                    <div className="mb-5 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-sm">
                         {error}
                     </div>
                 )}
 
                 <form onSubmit={handleRegister} className="space-y-4">
                     <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="email" className="block text-xs font-semibold text-lk-muted-bright uppercase tracking-wider mb-1.5">
                             Email
                         </label>
                         <input
@@ -88,12 +95,12 @@ export default function RegisterPage() {
                             required
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-violet-500 outline-none"
+                            className="w-full bg-lk-black border border-lk-border rounded-xl p-3 text-lk-white placeholder-lk-muted focus:border-lk-amber/50 focus:outline-none transition-colors text-sm"
                             placeholder="you@example.com"
                         />
                     </div>
                     <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                        <label htmlFor="password" className="block text-xs font-semibold text-lk-muted-bright uppercase tracking-wider mb-1.5">
                             Password
                         </label>
                         <input
@@ -103,7 +110,7 @@ export default function RegisterPage() {
                             minLength={8}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="w-full border border-gray-300 rounded-xl p-3 focus:ring-2 focus:ring-violet-500 outline-none"
+                            className="w-full bg-lk-black border border-lk-border rounded-xl p-3 text-lk-white placeholder-lk-muted focus:border-lk-amber/50 focus:outline-none transition-colors text-sm"
                             placeholder="At least 8 characters"
                         />
                         {password && (
@@ -113,29 +120,29 @@ export default function RegisterPage() {
                                         <div
                                             key={i}
                                             className={`h-1 flex-1 rounded-full transition-colors ${
-                                                strength.score >= i ? strength.color : "bg-gray-200"
+                                                strength.score >= i ? strength.color : "bg-lk-border"
                                             }`}
                                         />
                                     ))}
                                 </div>
-                                <p className="text-xs text-gray-400">
-                                    Password strength: <span className="font-medium text-gray-600">{strength.label}</span>
+                                <p className="text-xs text-lk-muted">
+                                    Strength: <span className="font-semibold text-lk-muted-bright">{strength.label}</span>
                                 </p>
                             </div>
                         )}
                     </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs font-semibold text-lk-muted-bright uppercase tracking-wider mb-2">
                             I am a...
                         </label>
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 type="button"
                                 onClick={() => setRole("fan")}
-                                className={`py-3 rounded-xl border-2 font-medium transition-colors ${
+                                className={`py-3 rounded-xl border-2 text-sm font-semibold transition-all ${
                                     role === "fan"
-                                        ? "border-violet-600 bg-violet-50 text-violet-700"
-                                        : "border-gray-200 text-gray-600 hover:border-gray-300"
+                                        ? "border-lk-amber bg-lk-amber/10 text-lk-amber"
+                                        : "border-lk-border text-lk-muted-bright hover:border-lk-border-bright"
                                 }`}
                             >
                                 Fan
@@ -143,28 +150,28 @@ export default function RegisterPage() {
                             <button
                                 type="button"
                                 onClick={() => setRole("influencer")}
-                                className={`py-3 rounded-xl border-2 font-medium transition-colors ${
+                                className={`py-3 rounded-xl border-2 text-sm font-semibold transition-all ${
                                     role === "influencer"
-                                        ? "border-violet-600 bg-violet-50 text-violet-700"
-                                        : "border-gray-200 text-gray-600 hover:border-gray-300"
+                                        ? "border-lk-amber bg-lk-amber/10 text-lk-amber"
+                                        : "border-lk-border text-lk-muted-bright hover:border-lk-border-bright"
                                 }`}
                             >
-                                Influencer
+                                Creator
                             </button>
                         </div>
                     </div>
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full py-3 bg-violet-600 text-white font-bold rounded-xl hover:bg-violet-700 transition-colors disabled:bg-violet-300"
+                        className="w-full py-3 bg-lk-amber text-lk-black font-bold rounded-full hover:brightness-110 transition-all disabled:opacity-50 tracking-wide"
                     >
                         {loading ? "Creating account..." : "Create Account"}
                     </button>
                 </form>
 
-                <p className="text-center text-gray-500 text-sm mt-6">
+                <p className="text-center text-lk-muted text-sm mt-6">
                     Already have an account?{" "}
-                    <Link href="/login" className="text-violet-600 font-medium hover:underline">
+                    <Link href="/login" className="text-lk-amber font-semibold hover:brightness-110 transition-colors">
                         Sign in
                     </Link>
                 </p>

@@ -10,7 +10,6 @@ function LoginForm() {
     const searchParams = useSearchParams();
     const registered = searchParams.get("registered") === "1";
     const regRole = searchParams.get("role");
-    // After fresh registration, redirect to onboarding; otherwise to requested page or dashboard
     const redirectTo = registered
         ? (regRole === "influencer" ? "/onboarding/influencer" : "/onboarding/fan")
         : (searchParams.get("redirect") || "/dashboard");
@@ -24,13 +23,7 @@ function LoginForm() {
         e.preventDefault();
         setLoading(true);
         setError(null);
-
-        const result = await signIn("credentials", {
-            email,
-            password,
-            redirect: false,
-        });
-
+        const result = await signIn("credentials", { email, password, redirect: false });
         if (result?.error) {
             setError("Invalid email or password.");
         } else {
@@ -44,27 +37,36 @@ function LoginForm() {
     };
 
     return (
-        <div className="max-w-md w-full bg-white rounded-xl shadow-md p-8">
+        <div className="max-w-md w-full bg-lk-surface border border-lk-border rounded-2xl p-8">
             <div className="text-center mb-8">
-                <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
-                <p className="text-gray-500 mt-2">Sign in to your InfluenceMe account</p>
+                <Link
+                    href="/"
+                    className="text-2xl font-black text-lk-amber tracking-[-0.04em] block mb-6"
+                    style={{ fontFamily: "var(--font-syne)" }}
+                >
+                    LEAKY
+                </Link>
+                <h1 className="text-2xl font-bold text-lk-white" style={{ fontFamily: "var(--font-syne)" }}>
+                    Welcome back
+                </h1>
+                <p className="text-lk-muted mt-1.5 text-sm">Sign in to your account</p>
             </div>
 
             {registered && (
-                <div className="mb-4 p-3 bg-green-50 border border-green-200 text-green-700 rounded-lg text-sm">
+                <div className="mb-5 p-3 bg-lk-cyan/10 border border-lk-cyan/20 text-lk-cyan rounded-xl text-sm">
                     Account created! Sign in below.
                 </div>
             )}
 
             {error && (
-                <div className="mb-4 p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">
+                <div className="mb-5 p-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl text-sm">
                     {error}
                 </div>
             )}
 
             <form onSubmit={handleCredentialsLogin} className="space-y-4">
                 <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="email" className="block text-xs font-semibold text-lk-muted-bright uppercase tracking-wider mb-1.5">
                         Email
                     </label>
                     <input
@@ -73,12 +75,12 @@ function LoginForm() {
                         required
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full bg-lk-black border border-lk-border rounded-xl p-3 text-lk-white placeholder-lk-muted focus:border-lk-amber/50 focus:outline-none transition-colors text-sm"
                         placeholder="you@example.com"
                     />
                 </div>
                 <div>
-                    <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="password" className="block text-xs font-semibold text-lk-muted-bright uppercase tracking-wider mb-1.5">
                         Password
                     </label>
                     <input
@@ -87,30 +89,30 @@ function LoginForm() {
                         required
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        className="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-blue-500 outline-none"
+                        className="w-full bg-lk-black border border-lk-border rounded-xl p-3 text-lk-white placeholder-lk-muted focus:border-lk-amber/50 focus:outline-none transition-colors text-sm"
                         placeholder="••••••••"
                     />
                 </div>
                 <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-3 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 transition-colors disabled:bg-blue-300"
+                    className="w-full py-3 bg-lk-amber text-lk-black font-bold rounded-full hover:brightness-110 transition-all disabled:opacity-50 tracking-wide"
                 >
                     {loading ? "Signing in..." : "Sign In"}
                 </button>
             </form>
 
             <div className="my-6 flex items-center gap-3">
-                <div className="flex-1 h-px bg-gray-200" />
-                <span className="text-gray-400 text-sm">or</span>
-                <div className="flex-1 h-px bg-gray-200" />
+                <div className="flex-1 h-px bg-lk-border" />
+                <span className="text-lk-muted text-xs tracking-wider">or</span>
+                <div className="flex-1 h-px bg-lk-border" />
             </div>
 
             <button
                 onClick={handleGoogleLogin}
-                className="w-full py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+                className="w-full py-3 border border-lk-border text-lk-muted-bright font-medium rounded-full hover:border-lk-border-bright hover:text-lk-white hover:bg-lk-surface-2 transition-all flex items-center justify-center gap-2 text-sm"
             >
-                <svg className="w-5 h-5" viewBox="0 0 24 24">
+                <svg className="w-4 h-4" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
                     <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
                     <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
@@ -119,9 +121,9 @@ function LoginForm() {
                 Continue with Google
             </button>
 
-            <p className="text-center text-gray-500 text-sm mt-6">
+            <p className="text-center text-lk-muted text-sm mt-6">
                 Don&apos;t have an account?{" "}
-                <Link href="/register" className="text-blue-600 font-medium hover:underline">
+                <Link href="/register" className="text-lk-amber font-semibold hover:brightness-110 transition-colors">
                     Sign up
                 </Link>
             </p>
@@ -131,8 +133,8 @@ function LoginForm() {
 
 export default function LoginPage() {
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4">
-            <Suspense fallback={<div className="text-gray-500">Loading...</div>}>
+        <div className="min-h-screen flex items-center justify-center bg-lk-black py-12 px-4 pt-24">
+            <Suspense fallback={<div className="text-lk-muted text-sm">Loading...</div>}>
                 <LoginForm />
             </Suspense>
         </div>

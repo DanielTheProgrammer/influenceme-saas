@@ -1,32 +1,70 @@
 @import "tailwindcss";
 
+/* ─── Leaky Design Tokens ─────────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-
-  /* Brand colors */
-  --brand-primary: #7C3AED;      /* violet-600 */
-  --brand-primary-dark: #6D28D9; /* violet-700 */
-  --brand-accent: #F43F5E;       /* rose-500 */
-  --brand-accent-dark: #E11D48;  /* rose-600 */
-  --brand-dark: #030712;         /* gray-950 */
-  --brand-dark-2: #111827;       /* gray-900 */
+  --lk-black:          #07070F;
+  --lk-surface:        #0D0D1A;
+  --lk-surface-2:      #121220;
+  --lk-border:         #1A1A2E;
+  --lk-border-bright:  #272742;
+  --lk-amber:          #F0A500;
+  --lk-amber-soft:     rgba(240, 165, 0, 0.12);
+  --lk-cyan:           #00CDB4;
+  --lk-cyan-soft:      rgba(0, 205, 180, 0.10);
+  --lk-white:          #EDEDFF;
+  --lk-muted:          #4A4A6A;
+  --lk-muted-bright:   #7A7A9E;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-lk-black:         var(--lk-black);
+  --color-lk-surface:       var(--lk-surface);
+  --color-lk-surface-2:     var(--lk-surface-2);
+  --color-lk-border:        var(--lk-border);
+  --color-lk-border-bright: var(--lk-border-bright);
+  --color-lk-amber:         var(--lk-amber);
+  --color-lk-amber-soft:    var(--lk-amber-soft);
+  --color-lk-cyan:          var(--lk-cyan);
+  --color-lk-cyan-soft:     var(--lk-cyan-soft);
+  --color-lk-white:         var(--lk-white);
+  --color-lk-muted:         var(--lk-muted);
+  --color-lk-muted-bright:  var(--lk-muted-bright);
+
+  --font-heading: var(--font-syne), 'Syne', sans-serif;
+  --font-body:    var(--font-epilogue), 'Epilogue', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--lk-black);
+  color: var(--lk-white);
+  font-family: var(--font-epilogue), 'Epilogue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Smooth scrolling */
-html {
-  scroll-behavior: smooth;
+/* ─── Scrolling marquee ───────────────────────────────────── */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.animate-marquee {
+  animation: marquee 30s linear infinite;
+}
+
+/* ─── Ambient glow blobs ─────────────────────────────────── */
+.glow-amber {
+  box-shadow: 0 0 60px rgba(240, 165, 0, 0.18), 0 0 120px rgba(240, 165, 0, 0.06);
+}
+.glow-cyan {
+  box-shadow: 0 0 60px rgba(0, 205, 180, 0.15), 0 0 120px rgba(0, 205, 180, 0.05);
+}
+
+/* ─── Outline text effect ─────────────────────────────────── */
+.text-outline-amber {
+  -webkit-text-stroke: 1px rgba(240, 165, 0, 0.08);
+  color: transparent;
 }

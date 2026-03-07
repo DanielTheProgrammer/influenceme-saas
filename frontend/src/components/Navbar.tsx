@@ -13,59 +13,66 @@ export default function Navbar() {
     const isFan = role === "fan";
 
     return (
-        <nav className="bg-gray-950 border-b border-gray-800 sticky top-0 z-40">
-            <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+        <nav className="fixed top-0 left-0 right-0 z-50 border-b border-lk-border bg-lk-black/90 backdrop-blur-xl">
+            <div className="max-w-7xl mx-auto px-5 h-16 flex items-center justify-between">
                 {/* Logo */}
-                <Link href="/" className="text-xl font-extrabold text-violet-400 tracking-tight">
-                    InfluenceMe
+                <Link
+                    href="/"
+                    className="text-xl font-black text-lk-amber tracking-[-0.04em] leading-none"
+                    style={{ fontFamily: "var(--font-syne)" }}
+                >
+                    LEAKY
                 </Link>
 
                 {/* Desktop nav */}
-                <div className="hidden md:flex items-center gap-6">
-                    <Link href="/browse" className="text-gray-300 hover:text-white font-medium transition-colors">
+                <div className="hidden md:flex items-center gap-8">
+                    <Link
+                        href="/browse"
+                        className="text-lk-muted-bright hover:text-lk-white text-sm font-medium tracking-wide transition-colors"
+                    >
                         Browse
                     </Link>
 
                     {status === "authenticated" ? (
                         <>
                             {isFan && (
-                                <Link href="/fan/requests" className="text-gray-300 hover:text-white font-medium transition-colors">
+                                <Link href="/fan/requests" className="text-lk-muted-bright hover:text-lk-white text-sm font-medium tracking-wide transition-colors">
                                     My Requests
                                 </Link>
                             )}
                             {isInfluencer && (
                                 <>
-                                    <Link href="/dashboard" className="text-gray-300 hover:text-white font-medium transition-colors">
+                                    <Link href="/dashboard" className="text-lk-muted-bright hover:text-lk-white text-sm font-medium tracking-wide transition-colors">
                                         Dashboard
                                     </Link>
-                                    <Link href="/influencer/analytics" className="text-gray-300 hover:text-white font-medium transition-colors">
+                                    <Link href="/influencer/analytics" className="text-lk-muted-bright hover:text-lk-white text-sm font-medium tracking-wide transition-colors">
                                         Analytics
                                     </Link>
-                                    <Link href="/influencer" className="text-gray-300 hover:text-white font-medium transition-colors">
+                                    <Link href="/influencer" className="text-lk-muted-bright hover:text-lk-white text-sm font-medium tracking-wide transition-colors">
                                         Profile
                                     </Link>
                                 </>
                             )}
                             <div className="flex items-center gap-3">
-                                <span className="text-sm text-gray-400">{session?.user?.email}</span>
+                                <span className="text-xs text-lk-muted truncate max-w-[140px]">{session?.user?.email}</span>
                                 <button
                                     onClick={() => signOut({ callbackUrl: "/" })}
-                                    className="px-4 py-2 text-sm font-medium text-gray-300 hover:text-rose-400 border border-gray-700 rounded-lg hover:border-rose-700 transition-colors"
+                                    className="px-4 py-1.5 text-xs font-semibold text-lk-muted-bright hover:text-lk-white border border-lk-border hover:border-lk-border-bright rounded-full tracking-wide transition-all"
                                 >
-                                    Sign Out
+                                    Sign out
                                 </button>
                             </div>
                         </>
                     ) : (
                         <div className="flex items-center gap-3">
-                            <Link href="/login" className="text-gray-300 hover:text-white font-medium transition-colors">
-                                Log In
+                            <Link href="/login" className="text-lk-muted-bright hover:text-lk-white text-sm font-medium tracking-wide transition-colors">
+                                Log in
                             </Link>
                             <Link
                                 href="/register"
-                                className="px-4 py-2 bg-violet-600 text-white font-medium rounded-lg hover:bg-violet-700 transition-colors text-sm"
+                                className="px-5 py-2 bg-lk-amber text-lk-black text-sm font-bold rounded-full tracking-wide hover:brightness-110 transition-all"
                             >
-                                Sign Up
+                                Get Started
                             </Link>
                         </div>
                     )}
@@ -73,11 +80,11 @@ export default function Navbar() {
 
                 {/* Mobile hamburger */}
                 <button
-                    className="md:hidden p-2 text-gray-300"
+                    className="md:hidden p-2 text-lk-muted-bright hover:text-lk-white transition-colors"
                     onClick={() => setMenuOpen(!menuOpen)}
                     aria-label="Toggle menu"
                 >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         {menuOpen ? (
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         ) : (
@@ -89,24 +96,24 @@ export default function Navbar() {
 
             {/* Mobile menu */}
             {menuOpen && (
-                <div className="md:hidden border-t border-gray-800 bg-gray-950 px-4 py-4 space-y-3">
-                    <Link href="/browse" onClick={() => setMenuOpen(false)} className="block text-gray-300 font-medium">Browse</Link>
+                <div className="md:hidden border-t border-lk-border bg-lk-surface px-5 py-5 space-y-4">
+                    <Link href="/browse" onClick={() => setMenuOpen(false)} className="block text-lk-white font-medium text-sm">Browse</Link>
                     {status === "authenticated" ? (
                         <>
-                            {isFan && <Link href="/fan/requests" onClick={() => setMenuOpen(false)} className="block text-gray-300 font-medium">My Requests</Link>}
+                            {isFan && <Link href="/fan/requests" onClick={() => setMenuOpen(false)} className="block text-lk-white font-medium text-sm">My Requests</Link>}
                             {isInfluencer && (
                                 <>
-                                    <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="block text-gray-300 font-medium">Dashboard</Link>
-                                    <Link href="/influencer/analytics" onClick={() => setMenuOpen(false)} className="block text-gray-300 font-medium">Analytics</Link>
-                                    <Link href="/influencer" onClick={() => setMenuOpen(false)} className="block text-gray-300 font-medium">Profile</Link>
+                                    <Link href="/dashboard" onClick={() => setMenuOpen(false)} className="block text-lk-white font-medium text-sm">Dashboard</Link>
+                                    <Link href="/influencer/analytics" onClick={() => setMenuOpen(false)} className="block text-lk-white font-medium text-sm">Analytics</Link>
+                                    <Link href="/influencer" onClick={() => setMenuOpen(false)} className="block text-lk-white font-medium text-sm">Profile</Link>
                                 </>
                             )}
-                            <button onClick={() => signOut({ callbackUrl: "/" })} className="block text-rose-400 font-medium">Sign Out</button>
+                            <button onClick={() => signOut({ callbackUrl: "/" })} className="block text-lk-muted-bright font-medium text-sm">Sign out</button>
                         </>
                     ) : (
                         <>
-                            <Link href="/login" onClick={() => setMenuOpen(false)} className="block text-gray-300 font-medium">Log In</Link>
-                            <Link href="/register" onClick={() => setMenuOpen(false)} className="block text-violet-400 font-bold">Sign Up</Link>
+                            <Link href="/login" onClick={() => setMenuOpen(false)} className="block text-lk-white font-medium text-sm">Log in</Link>
+                            <Link href="/register" onClick={() => setMenuOpen(false)} className="inline-block px-5 py-2 bg-lk-amber text-lk-black text-sm font-bold rounded-full">Get Started</Link>
                         </>
                     )}
                 </div>

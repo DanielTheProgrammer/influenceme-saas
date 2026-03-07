@@ -22,24 +22,53 @@ interface FeaturedInfluencer {
     services: { engagement_type: string; price: number }[];
 }
 
+const PROOF_TYPES = [
+    { name: "Story Feature", desc: "Get featured in a story. Your network sees exactly who you're with.", price: "$50–$200", tag: "VISIBILITY BOOST", num: "01" },
+    { name: "Comment Drop", desc: "A comment on your post from an attractive person. Visible to all your followers.", price: "$15–$50", tag: "QUICK VALIDATION", num: "02" },
+    { name: "Post Shoutout", desc: "Be featured in a dedicated post. Maximum visibility to their entire audience.", price: "$100–$500", tag: "MAXIMUM IMPACT", num: "03" },
+    { name: "Tag Feature", desc: "Get tagged in a story or post. Appears across their network.", price: "$25–$100", tag: "NETWORK EXPANSION", num: "04" },
+    { name: "DM Validation", desc: "A personal message from an attractive person. Screenshot-worthy.", price: "$20–$75", tag: "PERSONAL CONFIDENCE", num: "05" },
+    { name: "Collab Content", desc: "Co-created content. Both audiences see you together.", price: "$200–$1K+", tag: "ULTIMATE PROOF", num: "06" },
+];
+
+const TICKER_ITEMS = ["Story Feature", "Comment Drop", "Post Shoutout", "Tag Feature", "DM Validation", "Collab Content"];
+
 const TESTIMONIALS = [
     {
-        quote: "Got a story tag from my favorite travel influencer in 24 hours. Absolutely worth it — my account blew up!",
-        name: "Jordan M.",
-        role: "Fan",
-        avatar: "https://i.pravatar.cc/64?u=jordan",
+        quote: "My ex started DMing me again within 48 hours. I just needed the right story features. Leaky delivered exactly that.",
+        name: "Alex K.",
+        role: "Post-breakup strategy",
+        avatar: "https://i.pravatar.cc/64?u=alex_leaky",
     },
     {
-        quote: "I've been on Cameo and other platforms. InfluenceMe is the cleanest experience and the escrow model actually protects both sides.",
-        name: "Aisha T.",
-        role: "Fan",
-        avatar: "https://i.pravatar.cc/64?u=aisha",
+        quote: "My Hinge likes literally tripled after getting tagged in a few photos with actual attractive people. This is just strategy.",
+        name: "Priya M.",
+        role: "Dating profile optimization",
+        avatar: "https://i.pravatar.cc/64?u=priya_leaky",
     },
     {
-        quote: "As an influencer, I love that I can counter-offer and negotiate. I control my pricing and commitments.",
-        name: "Marco R.",
-        role: "Influencer",
-        avatar: "https://i.pravatar.cc/64?u=marco",
+        quote: "I used Leaky to break into the NY fitness scene. Got featured by three local influencers. Client list doubled in 6 weeks.",
+        name: "Derek R.",
+        role: "Personal trainer, New York",
+        avatar: "https://i.pravatar.cc/64?u=derek_leaky",
+    },
+];
+
+const HOW_IT_WORKS = [
+    {
+        num: "01",
+        title: "Pick your creator",
+        desc: "Browse verified creators. Filter by proof type, price, and audience size. Find exactly the right person for your narrative.",
+    },
+    {
+        num: "02",
+        title: "Submit your request",
+        desc: "Tell them what you need. Use our AI studio to preview the outcome. Pay securely — funds held in escrow until delivery.",
+    },
+    {
+        num: "03",
+        title: "Verify and release",
+        desc: "The creator delivers proof. You confirm. Funds release. Your story is now in the world. Simple, protected, effective.",
     },
 ];
 
@@ -50,116 +79,245 @@ export default function HomePage() {
         fetch(`${API_URL}/marketplace/influencers`)
             .then((r) => r.json())
             .then((data: FeaturedInfluencer[]) => {
-                // Pick up to 6 influencers that have profile pics
-                const withPics = data.filter((i) => i.profile_picture_url);
-                setFeatured(withPics.slice(0, 6));
+                setFeatured(data.filter((i) => i.profile_picture_url).slice(0, 6));
             })
             .catch(() => {});
     }, []);
 
     return (
-        <div className="min-h-screen">
-            {/* ── Hero ── */}
-            <section className="relative overflow-hidden bg-gradient-to-br from-violet-700 via-blue-700 to-indigo-800 text-white">
-                {/* Background decoration */}
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute -top-20 -left-20 w-96 h-96 bg-pink-400 rounded-full blur-3xl" />
-                    <div className="absolute -bottom-20 -right-20 w-96 h-96 bg-cyan-400 rounded-full blur-3xl" />
+        <div className="bg-lk-black min-h-screen">
+
+            {/* ── HERO ─────────────────────────────────────────────── */}
+            <section className="relative min-h-screen flex flex-col justify-center overflow-hidden pt-16">
+                {/* Ambient glow blobs */}
+                <div className="absolute -top-32 -left-32 w-[700px] h-[700px] rounded-full pointer-events-none"
+                    style={{ background: "radial-gradient(circle, rgba(240,165,0,0.06) 0%, transparent 70%)" }} />
+                <div className="absolute -bottom-32 -right-32 w-[600px] h-[600px] rounded-full pointer-events-none"
+                    style={{ background: "radial-gradient(circle, rgba(0,205,180,0.05) 0%, transparent 70%)" }} />
+
+                {/* Giant watermark LEAKY */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
+                    <span
+                        className="text-[22vw] font-black leading-none tracking-[-0.05em] text-outline-amber"
+                        style={{ fontFamily: "var(--font-syne)" }}
+                    >
+                        LEAKY
+                    </span>
                 </div>
 
-                <div className="relative max-w-6xl mx-auto px-4 pt-24 pb-28 text-center">
-                    <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-full px-4 py-1.5 text-sm font-medium mb-8">
-                        <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                        Live marketplace — real influencers, real engagement
+                <div className="relative max-w-6xl mx-auto px-5 pt-20 pb-24 text-center">
+                    {/* Badge */}
+                    <div className="inline-flex items-center gap-2 border border-lk-border-bright bg-lk-surface/70 backdrop-blur-sm rounded-full px-4 py-1.5 text-[11px] font-semibold tracking-[0.16em] text-lk-muted-bright uppercase mb-10">
+                        <span className="w-1.5 h-1.5 rounded-full bg-lk-cyan animate-pulse" />
+                        Social Proof Marketplace
                     </div>
 
-                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-extrabold leading-tight mb-6 tracking-tight">
-                        Real engagement from<br />
-                        <span className="bg-gradient-to-r from-pink-300 via-yellow-200 to-cyan-300 bg-clip-text text-transparent">
-                            influencers you love
-                        </span>
+                    {/* Headline */}
+                    <h1
+                        className="font-black leading-[0.88] tracking-[-0.04em] mb-8"
+                        style={{ fontFamily: "var(--font-syne)", fontSize: "clamp(3rem, 10vw, 7rem)" }}
+                    >
+                        <span className="text-lk-white block">Buy the story.</span>
+                        <span className="text-lk-amber block">Own the narrative.</span>
                     </h1>
 
-                    <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto leading-relaxed">
-                        Story tags, shoutouts, follows — purchased directly from verified influencers.
-                        Secure escrow. AI previews. Counter-offer negotiation.
+                    {/* Sub */}
+                    <p className="text-lk-muted-bright text-xl md:text-2xl mb-3 max-w-xl mx-auto">
+                        Make them wonder who you&apos;re with.
+                    </p>
+                    <p className="text-lk-muted text-sm md:text-base mb-12 max-w-2xl mx-auto leading-relaxed">
+                        Get tagged, featured, and validated by attractive, successful people.
+                        Engineered social proof. Real results. Your network will notice.
                     </p>
 
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+                    {/* CTAs */}
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center mb-20">
                         <Link
                             href="/browse"
-                            className="px-8 py-4 bg-white text-violet-700 font-bold rounded-xl text-lg hover:bg-blue-50 transition-all shadow-xl hover:shadow-2xl hover:scale-105"
+                            className="px-8 py-4 bg-lk-amber text-lk-black font-bold rounded-full text-base tracking-wide hover:brightness-110 transition-all shadow-lg hover:shadow-lk-amber/20 hover:-translate-y-0.5"
                         >
-                            Browse Influencers
+                            Explore Creators →
                         </Link>
                         <Link
                             href="/register"
-                            className="px-8 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white font-bold rounded-xl text-lg hover:bg-white/20 transition-all"
+                            className="px-8 py-4 border border-lk-border-bright text-lk-white font-semibold rounded-full text-base tracking-wide hover:border-lk-muted-bright hover:bg-lk-surface transition-all"
                         >
-                            Join as Influencer
+                            Earn as a Model
                         </Link>
                     </div>
 
-                    {/* Social proof stats */}
-                    <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto">
+                    {/* Stats */}
+                    <div className="inline-flex flex-wrap gap-8 md:gap-14 justify-center border border-lk-border rounded-2xl bg-lk-surface/50 backdrop-blur-sm px-8 py-5">
                         {[
-                            { value: "10+", label: "Influencers" },
-                            { value: "530K+", label: "Combined reach" },
-                            { value: "100%", label: "Secure escrow" },
-                        ].map((stat) => (
-                            <div key={stat.label} className="text-center">
-                                <div className="text-3xl font-extrabold">{stat.value}</div>
-                                <div className="text-blue-200 text-sm mt-1">{stat.label}</div>
+                            { v: "250K+", l: "Models & Influencers" },
+                            { v: "4.8M+", l: "Proof Moments Delivered" },
+                            { v: "96%", l: "Satisfaction Rate" },
+                        ].map((s) => (
+                            <div key={s.l} className="text-center">
+                                <div
+                                    className="text-2xl md:text-3xl font-extrabold text-lk-white"
+                                    style={{ fontFamily: "var(--font-syne)" }}
+                                >
+                                    {s.v}
+                                </div>
+                                <div className="text-[11px] text-lk-muted mt-1 tracking-wide uppercase">{s.l}</div>
                             </div>
                         ))}
                     </div>
                 </div>
             </section>
 
-            {/* ── Featured Influencers ── */}
+            {/* ── SCROLLING TICKER ────────────────────────────────── */}
+            <div className="border-y border-lk-border bg-lk-surface overflow-hidden py-3.5">
+                <div className="flex animate-marquee whitespace-nowrap">
+                    {[...Array(4)].map((_, i) => (
+                        <span key={i} className="flex items-center">
+                            {TICKER_ITEMS.map((t) => (
+                                <span key={t} className="inline-flex items-center gap-3 mx-8 text-[11px] font-semibold tracking-[0.2em] text-lk-muted-bright uppercase">
+                                    <span className="text-lk-amber text-base">✦</span>
+                                    {t}
+                                </span>
+                            ))}
+                        </span>
+                    ))}
+                </div>
+            </div>
+
+            {/* ── PROOF TYPES ─────────────────────────────────────── */}
+            <section className="py-28 px-5 bg-lk-black">
+                <div className="max-w-6xl mx-auto">
+                    <div className="mb-16">
+                        <p className="text-[11px] font-semibold tracking-[0.2em] text-lk-amber uppercase mb-5">The Proof Types</p>
+                        <h2
+                            className="font-black leading-tight tracking-[-0.03em]"
+                            style={{ fontFamily: "var(--font-syne)", fontSize: "clamp(2rem, 5vw, 3.5rem)" }}
+                        >
+                            <span className="text-lk-white">Six ways to</span><br />
+                            <span className="text-lk-cyan">engineer your story.</span>
+                        </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {PROOF_TYPES.map((pt) => (
+                            <div
+                                key={pt.name}
+                                className="bg-lk-surface border border-lk-border rounded-2xl p-6 hover:border-lk-border-bright hover:bg-lk-surface-2 transition-all group cursor-default"
+                            >
+                                <div className="flex items-start justify-between mb-5">
+                                    <span className="text-[10px] font-bold tracking-[0.18em] text-lk-muted uppercase">{pt.tag}</span>
+                                    <span
+                                        className="text-3xl font-black text-lk-border-bright group-hover:text-lk-amber transition-colors"
+                                        style={{ fontFamily: "var(--font-syne)" }}
+                                    >
+                                        {pt.num}
+                                    </span>
+                                </div>
+                                <h3
+                                    className="font-bold text-lg text-lk-white mb-2"
+                                    style={{ fontFamily: "var(--font-syne)" }}
+                                >
+                                    {pt.name}
+                                </h3>
+                                <p className="text-sm text-lk-muted leading-relaxed mb-4">{pt.desc}</p>
+                                <p className="text-lk-amber font-semibold text-sm tracking-wide">{pt.price}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── HOW IT WORKS ────────────────────────────────────── */}
+            <section className="py-28 px-5 border-y border-lk-border bg-lk-surface/30">
+                <div className="max-w-6xl mx-auto">
+                    <div className="mb-16">
+                        <p className="text-[11px] font-semibold tracking-[0.2em] text-lk-amber uppercase mb-5">The Play</p>
+                        <h2
+                            className="font-black leading-tight tracking-[-0.03em]"
+                            style={{ fontFamily: "var(--font-syne)", fontSize: "clamp(2rem, 5vw, 3.5rem)" }}
+                        >
+                            <span className="text-lk-white">Three steps.</span><br />
+                            <span className="text-lk-muted-bright">Zero guesswork.</span>
+                        </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        {HOW_IT_WORKS.map((step, i) => (
+                            <div key={step.num} className="relative">
+                                {/* Connector line (desktop) */}
+                                {i < 2 && (
+                                    <div className="hidden md:block absolute top-8 left-[calc(100%+1rem)] w-8 h-px bg-lk-border-bright" />
+                                )}
+                                <div
+                                    className="text-6xl font-black text-lk-border mb-5 leading-none"
+                                    style={{ fontFamily: "var(--font-syne)" }}
+                                >
+                                    {step.num}
+                                </div>
+                                <h3
+                                    className="font-bold text-xl text-lk-white mb-3"
+                                    style={{ fontFamily: "var(--font-syne)" }}
+                                >
+                                    {step.title}
+                                </h3>
+                                <p className="text-lk-muted text-sm leading-relaxed">{step.desc}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+
+            {/* ── FEATURED CREATORS ───────────────────────────────── */}
             {featured.length > 0 && (
-                <section className="py-20 px-4 bg-gray-50">
+                <section className="py-28 px-5 bg-lk-black">
                     <div className="max-w-6xl mx-auto">
-                        <div className="flex items-end justify-between mb-10">
+                        <div className="flex items-end justify-between mb-14">
                             <div>
-                                <h2 className="text-3xl font-bold text-gray-900">Featured Influencers</h2>
-                                <p className="text-gray-500 mt-1">Book real engagement from these creators today</p>
+                                <p className="text-[11px] font-semibold tracking-[0.2em] text-lk-amber uppercase mb-5">On Leaky Now</p>
+                                <h2
+                                    className="font-black text-lk-white leading-tight tracking-[-0.03em]"
+                                    style={{ fontFamily: "var(--font-syne)", fontSize: "clamp(2rem, 5vw, 3.5rem)" }}
+                                >
+                                    Meet the creators.
+                                </h2>
                             </div>
                             <Link
                                 href="/browse"
-                                className="hidden md:inline-flex items-center gap-1 text-blue-600 font-medium hover:underline text-sm"
+                                className="hidden md:inline-flex items-center gap-1.5 text-sm font-semibold text-lk-muted-bright hover:text-lk-amber transition-colors tracking-wide"
                             >
-                                View all &rarr;
+                                View all <span className="text-lk-amber">→</span>
                             </Link>
                         </div>
 
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                             {featured.map((inf) => {
-                                const minPrice = inf.services.length
-                                    ? Math.min(...inf.services.map((s) => s.price))
-                                    : null;
+                                const minPrice = inf.services.length ? Math.min(...inf.services.map((s) => s.price)) : null;
                                 return (
                                     <Link
                                         key={inf.id}
                                         href={`/influencers/${inf.id}`}
-                                        className="group bg-white rounded-2xl p-4 shadow-sm hover:shadow-lg transition-all duration-200 text-center border border-transparent hover:border-violet-200"
+                                        className="group bg-lk-surface border border-lk-border hover:border-lk-amber/40 rounded-2xl p-4 text-center transition-all duration-200"
                                     >
-                                        <div className="relative mx-auto w-16 h-16 mb-3">
+                                        <div className="relative mx-auto w-14 h-14 mb-3">
                                             <Image
                                                 src={inf.profile_picture_url!}
                                                 alt={inf.display_name}
-                                                width={64}
-                                                height={64}
-                                                className="w-16 h-16 rounded-full object-cover border-2 border-violet-100 group-hover:border-violet-400 transition-colors"
+                                                width={56}
+                                                height={56}
+                                                className="w-14 h-14 rounded-full object-cover border-2 border-lk-border group-hover:border-lk-amber/50 transition-colors"
                                                 unoptimized
                                             />
                                         </div>
-                                        <p className="font-bold text-sm text-gray-900 truncate leading-tight">{inf.display_name}</p>
+                                        <p
+                                            className="font-bold text-xs text-lk-white truncate leading-tight group-hover:text-lk-amber transition-colors"
+                                            style={{ fontFamily: "var(--font-syne)" }}
+                                        >
+                                            {inf.display_name}
+                                        </p>
                                         {inf.followers_count && (
-                                            <p className="text-xs text-gray-400 mt-0.5">{formatFollowers(inf.followers_count)} followers</p>
+                                            <p className="text-[10px] text-lk-muted mt-0.5">{formatFollowers(inf.followers_count)}</p>
                                         )}
                                         {minPrice !== null && (
-                                            <p className="text-xs font-semibold text-violet-600 mt-1">from ${minPrice}</p>
+                                            <p className="text-[11px] font-bold text-lk-amber mt-1">from ${minPrice}</p>
                                         )}
                                     </Link>
                                 );
@@ -167,156 +325,42 @@ export default function HomePage() {
                         </div>
 
                         <div className="text-center mt-8 md:hidden">
-                            <Link href="/browse" className="text-blue-600 font-medium hover:underline text-sm">
-                                View all influencers &rarr;
+                            <Link href="/browse" className="text-sm font-semibold text-lk-muted-bright hover:text-lk-amber transition-colors">
+                                View all creators →
                             </Link>
                         </div>
                     </div>
                 </section>
             )}
 
-            {/* ── How It Works ── */}
-            <section className="py-20 px-4 bg-white">
-                <div className="max-w-5xl mx-auto">
-                    <h2 className="text-3xl font-bold text-center mb-3 text-gray-900">How It Works</h2>
-                    <p className="text-center text-gray-500 mb-14">From browse to fulfilled in 3 simple steps</p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-10 relative">
-                        {/* Connector line */}
-                        <div className="hidden md:block absolute top-10 left-1/3 right-1/3 h-0.5 bg-gradient-to-r from-violet-200 to-blue-200" />
-
-                        {[
-                            {
-                                step: "01",
-                                title: "Browse & Choose",
-                                desc: "Explore verified influencers. Filter by engagement type, price, and follower count. See recent posts and services.",
-                                icon: (
-                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                                    </svg>
-                                ),
-                                color: "bg-violet-100 text-violet-600",
-                            },
-                            {
-                                step: "02",
-                                title: "Preview & Request",
-                                desc: "Use our AI studio to generate a preview of exactly what your shoutout will look like. Submit and pay securely.",
-                                icon: (
-                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                    </svg>
-                                ),
-                                color: "bg-blue-100 text-blue-600",
-                            },
-                            {
-                                step: "03",
-                                title: "Verify & Release",
-                                desc: "The influencer fulfills your request. You verify it happened, then funds are released from escrow. Simple.",
-                                icon: (
-                                    <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                ),
-                                color: "bg-green-100 text-green-600",
-                            },
-                        ].map((item) => (
-                            <div key={item.step} className="text-center relative">
-                                <div className={`w-20 h-20 ${item.color} rounded-2xl flex items-center justify-center mx-auto mb-5 relative`}>
-                                    {item.icon}
-                                    <span className="absolute -top-2 -right-2 w-6 h-6 bg-gray-900 text-white text-xs font-bold rounded-full flex items-center justify-center">
-                                        {item.step}
-                                    </span>
-                                </div>
-                                <h3 className="text-xl font-bold mb-2 text-gray-900">{item.title}</h3>
-                                <p className="text-gray-500 leading-relaxed">{item.desc}</p>
-                            </div>
-                        ))}
+            {/* ── TESTIMONIALS ────────────────────────────────────── */}
+            <section className="py-28 px-5 border-t border-lk-border bg-lk-surface/20">
+                <div className="max-w-6xl mx-auto">
+                    <div className="mb-14">
+                        <p className="text-[11px] font-semibold tracking-[0.2em] text-lk-amber uppercase mb-5">Real Results</p>
+                        <h2
+                            className="font-black text-lk-white leading-tight tracking-[-0.03em]"
+                            style={{ fontFamily: "var(--font-syne)", fontSize: "clamp(2rem, 5vw, 3.5rem)" }}
+                        >
+                            They won their narrative.
+                        </h2>
                     </div>
-                </div>
-            </section>
 
-            {/* ── Features ── */}
-            <section className="py-20 px-4 bg-gradient-to-b from-gray-50 to-white">
-                <div className="max-w-5xl mx-auto">
-                    <h2 className="text-3xl font-bold text-center mb-3 text-gray-900">Why InfluenceMe?</h2>
-                    <p className="text-center text-gray-500 mb-14">Everything you need, nothing you don&apos;t</p>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        {[
-                            {
-                                title: "Secure Escrow Payments",
-                                desc: "Funds are held safely until you confirm fulfillment. No risk of being ghosted — your money is always protected.",
-                                gradient: "from-violet-500 to-purple-600",
-                                icon: (
-                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                    </svg>
-                                ),
-                            },
-                            {
-                                title: "AI-Powered Previews",
-                                desc: "Generate a realistic preview of your shoutout before committing. See exactly what your story tag will look like.",
-                                gradient: "from-blue-500 to-cyan-600",
-                                icon: (
-                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-                                    </svg>
-                                ),
-                            },
-                            {
-                                title: "Verified Influencers",
-                                desc: "Every creator links their real Instagram or TikTok handles. DM-based verification confirms authenticity.",
-                                gradient: "from-green-500 to-emerald-600",
-                                icon: (
-                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                                    </svg>
-                                ),
-                            },
-                            {
-                                title: "Counter-Offer Negotiation",
-                                desc: "Influencers can propose alternative pricing or terms. Accept, reject, or counter back — full negotiation control.",
-                                gradient: "from-orange-500 to-pink-600",
-                                icon: (
-                                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                    </svg>
-                                ),
-                            },
-                        ].map((f) => (
-                            <div key={f.title} className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex gap-5 hover:shadow-md transition-shadow">
-                                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${f.gradient} flex items-center justify-center flex-shrink-0`}>
-                                    {f.icon}
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold mb-1 text-gray-900">{f.title}</h3>
-                                    <p className="text-gray-500 text-sm leading-relaxed">{f.desc}</p>
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </section>
-
-            {/* ── Testimonials ── */}
-            <section className="py-20 px-4 bg-white">
-                <div className="max-w-5xl mx-auto">
-                    <h2 className="text-3xl font-bold text-center mb-3 text-gray-900">What people are saying</h2>
-                    <p className="text-center text-gray-500 mb-14">Fans and creators love the platform</p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                         {TESTIMONIALS.map((t) => (
-                            <div key={t.name} className="bg-gray-50 rounded-2xl p-6 border border-gray-100">
-                                <div className="flex gap-0.5 mb-4">
-                                    {[...Array(5)].map((_, i) => (
-                                        <svg key={i} className="w-4 h-4 text-yellow-400 fill-current" viewBox="0 0 20 20">
-                                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                                        </svg>
-                                    ))}
+                            <div key={t.name} className="bg-lk-surface border border-lk-border rounded-2xl p-7 hover:border-lk-border-bright transition-all">
+                                <div
+                                    className="text-5xl font-black text-lk-amber/20 leading-none mb-4 select-none"
+                                    style={{ fontFamily: "var(--font-syne)" }}
+                                >
+                                    &ldquo;
                                 </div>
-                                <p className="text-gray-700 text-sm leading-relaxed mb-5 italic">&ldquo;{t.quote}&rdquo;</p>
+                                <p className="text-lk-white/80 text-sm leading-relaxed mb-6 italic">{t.quote}</p>
                                 <div className="flex items-center gap-3">
-                                    <Image src={t.avatar} alt={t.name} width={36} height={36} className="w-9 h-9 rounded-full object-cover" unoptimized />
+                                    <Image src={t.avatar} alt={t.name} width={36} height={36} className="w-9 h-9 rounded-full object-cover border border-lk-border" unoptimized />
                                     <div>
-                                        <p className="text-sm font-bold text-gray-900">{t.name}</p>
-                                        <p className="text-xs text-gray-400">{t.role}</p>
+                                        <p className="text-sm font-bold text-lk-white" style={{ fontFamily: "var(--font-syne)" }}>{t.name}</p>
+                                        <p className="text-xs text-lk-muted">{t.role}</p>
                                     </div>
                                 </div>
                             </div>
@@ -325,86 +369,89 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* ── Pricing ── */}
-            <section className="py-20 px-4 bg-gray-50">
-                <div className="max-w-4xl mx-auto">
-                    <h2 className="text-3xl font-bold text-center mb-3 text-gray-900">Simple, transparent pricing</h2>
-                    <p className="text-center text-gray-500 mb-14">Fans always browse and buy for free. Influencers pay only for pro features.</p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* ── PRICING ─────────────────────────────────────────── */}
+            <section className="py-28 px-5 bg-lk-black border-t border-lk-border">
+                <div className="max-w-5xl mx-auto">
+                    <div className="text-center mb-16">
+                        <p className="text-[11px] font-semibold tracking-[0.2em] text-lk-amber uppercase mb-5">Pricing</p>
+                        <h2
+                            className="font-black text-lk-white leading-tight tracking-[-0.03em]"
+                            style={{ fontFamily: "var(--font-syne)", fontSize: "clamp(2rem, 5vw, 3.5rem)" }}
+                        >
+                            Affordable proof.<br />
+                            <span className="text-lk-muted-bright">Real results.</span>
+                        </h2>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                         {/* Fan */}
-                        <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 text-center">
-                            <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                                </svg>
+                        <div className="bg-lk-surface border border-lk-border rounded-2xl p-7">
+                            <p className="text-[10px] font-bold text-lk-muted uppercase tracking-[0.18em] mb-6">For Everyone</p>
+                            <div
+                                className="text-4xl font-black text-lk-white mb-1"
+                                style={{ fontFamily: "var(--font-syne)" }}
+                            >
+                                Free
                             </div>
-                            <h3 className="text-xl font-bold mb-1">Fan</h3>
-                            <div className="text-4xl font-extrabold text-gray-900 mb-1">Free</div>
-                            <p className="text-gray-400 text-sm mb-6">Always free</p>
-                            <ul className="text-sm text-gray-600 space-y-3 mb-8 text-left">
-                                {["Browse all influencers", "AI preview generation", "Secure escrow payments", "Request tracking dashboard"].map((item) => (
-                                    <li key={item} className="flex items-center gap-2">
-                                        <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
+                            <p className="text-lk-muted text-sm mb-7">Always, forever</p>
+                            <ul className="space-y-3 text-sm text-lk-muted-bright mb-8">
+                                {["Browse all creators", "AI preview generation", "Secure escrow payments", "Request tracking"].map((item) => (
+                                    <li key={item} className="flex items-center gap-2.5">
+                                        <span className="text-lk-cyan text-base">✓</span>
                                         {item}
                                     </li>
                                 ))}
                             </ul>
-                            <Link href="/register" className="block w-full py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors">
+                            <Link href="/register" className="block w-full py-3 border border-lk-border-bright text-lk-white text-sm font-bold rounded-full text-center hover:border-lk-muted-bright hover:bg-lk-surface-2 transition-all">
                                 Get Started
                             </Link>
                         </div>
 
-                        {/* Influencer Basic */}
-                        <div className="bg-white border border-gray-200 rounded-2xl p-6 md:p-8 text-center">
-                            <div className="w-12 h-12 bg-violet-100 rounded-xl flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                </svg>
+                        {/* Creator Basic */}
+                        <div className="bg-lk-surface border border-lk-border rounded-2xl p-7">
+                            <p className="text-[10px] font-bold text-lk-muted uppercase tracking-[0.18em] mb-6">For Creators</p>
+                            <div
+                                className="text-4xl font-black text-lk-white mb-1"
+                                style={{ fontFamily: "var(--font-syne)" }}
+                            >
+                                Free
                             </div>
-                            <h3 className="text-xl font-bold mb-1">Influencer Basic</h3>
-                            <div className="text-4xl font-extrabold text-gray-900 mb-1">Free</div>
-                            <p className="text-gray-400 text-sm mb-6">20% platform fee</p>
-                            <ul className="text-sm text-gray-600 space-y-3 mb-8 text-left">
-                                {["List up to 3 services", "Accept / reject requests", "Counter-offer capability", "Earnings dashboard"].map((item) => (
-                                    <li key={item} className="flex items-center gap-2">
-                                        <svg className="w-4 h-4 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
+                            <p className="text-lk-muted text-sm mb-7">20% platform fee</p>
+                            <ul className="space-y-3 text-sm text-lk-muted-bright mb-8">
+                                {["List up to 3 services", "Accept & counter-offer", "Proof-based escrow", "Earnings dashboard"].map((item) => (
+                                    <li key={item} className="flex items-center gap-2.5">
+                                        <span className="text-lk-cyan text-base">✓</span>
                                         {item}
                                     </li>
                                 ))}
                             </ul>
-                            <Link href="/register" className="block w-full py-3 border-2 border-violet-600 text-violet-600 font-bold rounded-xl hover:bg-violet-50 transition-colors">
-                                Join as Influencer
+                            <Link href="/register" className="block w-full py-3 border border-lk-border-bright text-lk-white text-sm font-bold rounded-full text-center hover:border-lk-muted-bright hover:bg-lk-surface-2 transition-all">
+                                Join as Creator
                             </Link>
                         </div>
 
-                        {/* Influencer Pro */}
-                        <div className="bg-gradient-to-b from-violet-600 to-indigo-700 rounded-2xl p-6 md:p-8 text-center relative shadow-xl shadow-violet-200">
-                            <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-pink-500 to-orange-500 text-white text-xs font-bold px-4 py-1.5 rounded-full">
-                                MOST POPULAR
+                        {/* Creator Pro */}
+                        <div className="bg-lk-surface rounded-2xl p-7 relative border border-lk-amber/30" style={{ boxShadow: "0 0 40px rgba(240,165,0,0.06)" }}>
+                            <div className="absolute -top-3 left-6 bg-lk-amber text-lk-black text-[10px] font-black px-3 py-1 rounded-full tracking-widest uppercase">
+                                Most Popular
                             </div>
-                            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center mx-auto mb-4">
-                                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                </svg>
+                            <p className="text-[10px] font-bold text-lk-amber uppercase tracking-[0.18em] mb-6">Pro Creator</p>
+                            <div
+                                className="text-4xl font-black text-lk-white mb-1"
+                                style={{ fontFamily: "var(--font-syne)" }}
+                            >
+                                $29
                             </div>
-                            <h3 className="text-xl font-bold mb-1 text-white">Influencer Pro</h3>
-                            <div className="text-4xl font-extrabold text-white mb-1">$29</div>
-                            <p className="text-violet-200 text-sm mb-6">per month &middot; 10% platform fee</p>
-                            <ul className="text-sm text-violet-100 space-y-3 mb-8 text-left">
-                                {["Unlimited services", "Reduced 10% platform fee", "Priority listing in browse", "Advanced analytics", "Stripe Connect payouts"].map((item) => (
-                                    <li key={item} className="flex items-center gap-2">
-                                        <svg className="w-4 h-4 text-green-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                        </svg>
+                            <p className="text-lk-muted text-sm mb-7">per month · 10% fee</p>
+                            <ul className="space-y-3 text-sm text-lk-white/70 mb-8">
+                                {["Unlimited services", "Reduced 10% fee", "Priority placement", "Advanced analytics", "Stripe Connect payouts"].map((item) => (
+                                    <li key={item} className="flex items-center gap-2.5">
+                                        <span className="text-lk-amber text-base">✓</span>
                                         {item}
                                     </li>
                                 ))}
                             </ul>
-                            <Link href="/register" className="block w-full py-3 bg-white text-violet-700 font-bold rounded-xl hover:bg-violet-50 transition-colors">
+                            <Link href="/register" className="block w-full py-3 bg-lk-amber text-lk-black text-sm font-bold rounded-full text-center hover:brightness-110 transition-all">
                                 Start Free Trial
                             </Link>
                         </div>
@@ -412,31 +459,40 @@ export default function HomePage() {
                 </div>
             </section>
 
-            {/* ── Final CTA ── */}
-            <section className="py-24 px-4 bg-gradient-to-br from-violet-700 via-blue-700 to-indigo-800 text-white text-center relative overflow-hidden">
-                <div className="absolute inset-0 opacity-10">
-                    <div className="absolute top-10 left-1/4 w-64 h-64 bg-pink-400 rounded-full blur-3xl" />
-                    <div className="absolute bottom-10 right-1/4 w-64 h-64 bg-cyan-400 rounded-full blur-3xl" />
+            {/* ── FINAL CTA ───────────────────────────────────────── */}
+            <section className="py-32 px-5 border-t border-lk-border relative overflow-hidden">
+                {/* Glow */}
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                    <div className="w-[600px] h-[300px] rounded-full"
+                        style={{ background: "radial-gradient(ellipse, rgba(240,165,0,0.07) 0%, transparent 70%)" }} />
                 </div>
-                <div className="relative max-w-2xl mx-auto">
-                    <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
-                        Ready to connect with<br />your favorite creators?
+
+                <div className="relative max-w-3xl mx-auto text-center">
+                    <p className="text-[11px] font-semibold tracking-[0.2em] text-lk-amber uppercase mb-8">Your Move</p>
+                    <h2
+                        className="font-black text-lk-white leading-[0.9] tracking-[-0.04em] mb-8"
+                        style={{ fontFamily: "var(--font-syne)", fontSize: "clamp(3rem, 8vw, 5.5rem)" }}
+                    >
+                        Your moment<br />
+                        <span className="text-lk-amber">is waiting.</span>
                     </h2>
-                    <p className="text-blue-100 text-lg mb-10 leading-relaxed">
-                        Join the marketplace where authentic fan-influencer connections happen.
+                    <p className="text-lk-muted text-base md:text-lg mb-12 max-w-xl mx-auto leading-relaxed">
+                        Is it engineered? Yes. Is it effective? Absolutely.
+                        Your network doesn&apos;t know the difference.
+                        That&apos;s the point.
                     </p>
-                    <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                    <div className="flex flex-col sm:flex-row gap-3 justify-center">
                         <Link
                             href="/browse"
-                            className="inline-block px-10 py-4 bg-white text-violet-700 font-bold rounded-xl text-lg hover:bg-blue-50 transition-all shadow-xl hover:scale-105"
+                            className="px-10 py-4 bg-lk-amber text-lk-black font-bold rounded-full text-base tracking-wide hover:brightness-110 transition-all hover:-translate-y-0.5 shadow-lg hover:shadow-lk-amber/20"
                         >
-                            Browse Influencers
+                            Get Social Proof →
                         </Link>
                         <Link
                             href="/register"
-                            className="inline-block px-10 py-4 bg-white/10 backdrop-blur-sm border border-white/30 text-white font-bold rounded-xl text-lg hover:bg-white/20 transition-all"
+                            className="px-10 py-4 border border-lk-border-bright text-lk-white font-semibold rounded-full text-base hover:border-lk-muted-bright hover:bg-lk-surface transition-all"
                         >
-                            Create Free Account
+                            Become a Model
                         </Link>
                     </div>
                 </div>
