@@ -55,6 +55,14 @@ body {
   animation: marquee 30s linear infinite;
 }
 
+/* ─── Creator carousel (slower marquee) ──────────────────── */
+.animate-carousel {
+  animation: marquee 55s linear infinite;
+}
+.animate-carousel:hover {
+  animation-play-state: paused;
+}
+
 /* ─── Phone demo animations ──────────────────────────────── */
 @keyframes slideInUp {
   from { opacity: 0; transform: translateY(14px); }

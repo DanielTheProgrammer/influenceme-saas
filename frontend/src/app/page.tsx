@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import PhoneDemo from "@/components/PhoneDemo";
+import InfluencerCard from "@/components/InfluencerCard";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
@@ -80,7 +81,7 @@ export default function HomePage() {
         fetch(`${API_URL}/marketplace/influencers`)
             .then((r) => r.json())
             .then((data: FeaturedInfluencer[]) => {
-                setFeatured(data.filter((i) => i.profile_picture_url).slice(0, 6));
+                setFeatured(data.filter((i) => i.profile_picture_url).slice(0, 10));
             })
             .catch(() => {});
     }, []);
@@ -195,6 +196,38 @@ export default function HomePage() {
                     ))}
                 </div>
             </div>
+
+            {/* ── CREATOR CAROUSEL ────────────────────────────────── */}
+            {featured.length > 0 && (
+                <section className="py-14 bg-lk-black overflow-hidden">
+                    <div className="max-w-6xl mx-auto px-5 mb-7 flex items-center justify-between">
+                        <div>
+                            <p className="text-[11px] font-semibold tracking-[0.2em] text-lk-amber uppercase mb-1">On Leaky Now</p>
+                            <h2
+                                className="font-black text-lk-white text-2xl tracking-[-0.03em]"
+                                style={{ fontFamily: "var(--font-syne)" }}
+                            >
+                                Browse the talent.
+                            </h2>
+                        </div>
+                        <Link
+                            href="/browse"
+                            className="text-xs font-semibold text-lk-muted-bright hover:text-lk-amber transition-colors tracking-wide whitespace-nowrap"
+                        >
+                            View all →
+                        </Link>
+                    </div>
+
+                    {/* Auto-scrolling row — duplicated for seamless loop */}
+                    <div className="flex animate-carousel gap-5 pl-5" style={{ width: "max-content" }}>
+                        {[...featured, ...featured].map((inf, i) => (
+                            <div key={i} className="w-64 flex-shrink-0">
+                                <InfluencerCard influencer={inf} />
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {/* ── PROOF TYPES ─────────────────────────────────────── */}
             <section className="py-28 px-5 bg-lk-black">
