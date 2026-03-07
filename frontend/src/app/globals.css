@@ -82,6 +82,15 @@ body {
   animation: notifyIn 3.2s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
+/* ─── Phone screen view transition ──────────────────────── */
+@keyframes viewIn {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+.animate-view-in {
+  animation: viewIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 /* ─── Ambient glow blobs ─────────────────────────────────── */
 .glow-amber {
   box-shadow: 0 0 60px rgba(240, 165, 0, 0.18), 0 0 120px rgba(240, 165, 0, 0.06);
