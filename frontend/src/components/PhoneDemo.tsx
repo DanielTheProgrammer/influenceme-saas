@@ -11,18 +11,18 @@ const STORY_USERS = [
 ];
 
 const STREAM_COMMENTS = [
-    { user: "sofia_m",    text: "omg you look amazing 😍",                  color: "#FF6B9D" },
-    { user: "maya.k",     text: "tagged you in my story!! 🏷️",             color: "#A29BFE" },
-    { user: "alex_r",     text: "who IS this?? I need to know 👀",          color: "#74B9FF" },
-    { user: "bella_",     text: "your aura rn bestie ✨",                    color: "#FD79A8" },
-    { user: "zara.off",   text: "just tagged you again, sorry not sorry 😭", color: "#FDCB6E" },
-    { user: "emma.v",     text: "we NEED to collab 🤝",                      color: "#55EFC4" },
-    { user: "lily.rose",  text: "girlies asking about you everywhere lol",   color: "#FF7675" },
-    { user: "ava.k",      text: "your ex definitely saw this 💅",            color: "#E84393" },
-    { user: "nina.m",     text: "tagged you in 3 stories tonight omg",       color: "#C8D6E5" },
-    { user: "chloe_",     text: "following!! profile is goals 🫶",           color: "#6C5CE7" },
-    { user: "leila.j",    text: "you're literally everywhere rn 🔥",         color: "#F0A500" },
-    { user: "sara.off",   text: "this story is going viral bestie",          color: "#00CDB4" },
+    { user: "sofia_m",    text: "omg you look amazing 😍",                  color: "#FF6B9D", grad: "linear-gradient(135deg,#FF6B9D,#FE7E73)" },
+    { user: "maya.k",     text: "tagged you in my story!! 🏷️",             color: "#A29BFE", grad: "linear-gradient(135deg,#A29BFE,#6C5CE7)" },
+    { user: "alex_r",     text: "who IS this?? I need to know 👀",          color: "#74B9FF", grad: "linear-gradient(135deg,#74B9FF,#0984E3)" },
+    { user: "bella_",     text: "your aura rn bestie ✨",                    color: "#FD79A8", grad: "linear-gradient(135deg,#FD79A8,#E84393)" },
+    { user: "zara.off",   text: "just tagged you again, sorry not sorry 😭", color: "#FDCB6E", grad: "linear-gradient(135deg,#FDCB6E,#E17055)" },
+    { user: "emma.v",     text: "we NEED to collab 🤝",                      color: "#55EFC4", grad: "linear-gradient(135deg,#55EFC4,#00B894)" },
+    { user: "lily.rose",  text: "girlies asking about you everywhere lol",   color: "#FF7675", grad: "linear-gradient(135deg,#FF7675,#D63031)" },
+    { user: "ava.k",      text: "your ex definitely saw this 💅",            color: "#E84393", grad: "linear-gradient(135deg,#E84393,#9B59B6)" },
+    { user: "nina.m",     text: "tagged you in 3 stories tonight omg",       color: "#C8D6E5", grad: "linear-gradient(135deg,#C8D6E5,#8395A7)" },
+    { user: "chloe_",     text: "following!! profile is goals 🫶",           color: "#6C5CE7", grad: "linear-gradient(135deg,#6C5CE7,#A29BFE)" },
+    { user: "leila.j",    text: "you're literally everywhere rn 🔥",         color: "#F0A500", grad: "linear-gradient(135deg,#F0A500,#E17055)" },
+    { user: "sara.off",   text: "this story is going viral bestie",          color: "#00CDB4", grad: "linear-gradient(135deg,#00CDB4,#0984E3)" },
 ];
 
 const NOTIFICATIONS = [
@@ -36,7 +36,7 @@ const NOTIFICATIONS = [
 let uid = 10;
 
 export default function PhoneDemo() {
-    const [comments, setComments] = useState(() =>
+    const [comments, setComments] = useState<(typeof STREAM_COMMENTS[0] & { uid: number })[]>(() =>
         STREAM_COMMENTS.slice(0, 3).map((c, i) => ({ ...c, uid: i }))
     );
     const [notification, setNotification] = useState<{ text: string; key: number } | null>(null);
@@ -278,15 +278,25 @@ export default function PhoneDemo() {
                     </div>
 
                     {/* Comments stream */}
-                    <div style={{ flex: 1, overflow: "hidden", padding: "2px 12px 8px", display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 3 }}>
+                    <div style={{ flex: 1, overflow: "hidden", padding: "2px 12px 8px", display: "flex", flexDirection: "column", justifyContent: "flex-end", gap: 4 }}>
                         {comments.map((c, i) => (
                             <div
                                 key={c.uid}
                                 className={i === comments.length - 1 ? "animate-slide-up" : ""}
-                                style={{ opacity: 0.35 + (i / comments.length) * 0.65 }}
+                                style={{ display: "flex", alignItems: "center", gap: 6, opacity: 0.35 + (i / comments.length) * 0.65 }}
                             >
+                                {/* Avatar */}
+                                <div style={{
+                                    width: 20, height: 20, borderRadius: "50%", flexShrink: 0,
+                                    background: c.grad,
+                                    display: "flex", alignItems: "center", justifyContent: "center",
+                                    fontSize: 9, fontWeight: 700, color: "#fff",
+                                    border: "1.5px solid rgba(255,255,255,0.6)",
+                                }}>
+                                    {c.user[0].toUpperCase()}
+                                </div>
                                 <span style={{ fontWeight: 700, color: "#262626", fontSize: 11 }}>{c.user} </span>
-                                <span style={{ color: "#262626", fontSize: 11 }}>{c.text}</span>
+                                <span style={{ color: "#262626", fontSize: 11, overflow: "hidden", whiteSpace: "nowrap", textOverflow: "ellipsis" }}>{c.text}</span>
                             </div>
                         ))}
 
