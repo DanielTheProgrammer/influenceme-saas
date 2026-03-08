@@ -35,11 +35,13 @@ interface EngagementRequest {
 
 interface InfluencerProfile {
     id: number;
+    display_name: string | null;
     verification_code: string | null;
     instagram_handle: string | null;
     tiktok_handle: string | null;
     instagram_verification_status: string;
     tiktok_verification_status: string;
+    is_approved: boolean;
 }
 
 export default function InfluencerDashboard() {
@@ -333,6 +335,72 @@ export default function InfluencerDashboard() {
                 >
                     Create Profile
                 </Link>
+            </div>
+        );
+    }
+
+    if (profile && !profile.is_approved) {
+        return (
+            <div className="min-h-screen bg-lk-black flex items-center justify-center px-4 relative overflow-hidden">
+                <div className="absolute -top-40 -left-40 w-[500px] h-[500px] rounded-full pointer-events-none"
+                    style={{ background: "radial-gradient(circle, rgba(240,165,0,0.05) 0%, transparent 70%)" }} />
+                <div className="absolute -bottom-40 -right-40 w-[400px] h-[400px] rounded-full pointer-events-none"
+                    style={{ background: "radial-gradient(circle, rgba(0,205,180,0.04) 0%, transparent 70%)" }} />
+
+                <div className="relative max-w-md w-full">
+                    {/* Animated waiting indicator */}
+                    <div className="flex justify-center mb-8">
+                        <div className="relative w-16 h-16">
+                            <div className="absolute inset-0 rounded-full border-2 border-lk-amber/20" />
+                            <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-lk-amber animate-spin" />
+                            <div className="absolute inset-2 rounded-full bg-lk-surface flex items-center justify-center">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-lk-amber">
+                                    <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+                                </svg>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="bg-lk-surface border border-lk-border rounded-2xl p-8 text-center">
+                        <p className="text-[11px] font-semibold tracking-[0.2em] text-lk-amber uppercase mb-3">Pending Review</p>
+                        <h1 className="font-black text-lk-white text-2xl tracking-[-0.02em] mb-3" style={{ fontFamily: "var(--font-syne)" }}>
+                            You&apos;re on the list.
+                        </h1>
+                        <p className="text-lk-muted text-sm leading-relaxed mb-6">
+                            Hi {profile.display_name || "there"} — your profile is being reviewed by our team.
+                            We manually approve all creators to keep the marketplace quality high.
+                            You&apos;ll be able to receive requests as soon as you&apos;re approved.
+                        </p>
+
+                        {/* Verification nudge — do this while waiting */}
+                        {(profile.instagram_handle || profile.tiktok_handle) && profile.verification_code && (
+                            <div className="bg-lk-black border border-lk-border rounded-xl p-4 text-left mb-6">
+                                <p className="text-xs font-semibold text-lk-cyan uppercase tracking-[0.12em] mb-2">While you wait — verify your social</p>
+                                <p className="text-xs text-lk-muted mb-3">
+                                    DM your code to{" "}
+                                    {profile.instagram_handle && <span className="text-lk-white font-semibold">@leakyapp on Instagram</span>}
+                                    {profile.instagram_handle && profile.tiktok_handle && " or "}
+                                    {profile.tiktok_handle && <span className="text-lk-white font-semibold">@leakyapp on TikTok</span>}
+                                    {" "}to get your verified badge.
+                                </p>
+                                <div className="font-mono text-lg font-black text-lk-amber tracking-widest bg-lk-surface border border-lk-border rounded-lg px-4 py-2 text-center">
+                                    {profile.verification_code}
+                                </div>
+                            </div>
+                        )}
+
+                        <p className="text-xs text-lk-muted">
+                            Usually approved within 24 hours. Questions? DM us on Instagram.
+                        </p>
+                    </div>
+
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="mt-4 w-full py-2 text-xs text-lk-muted hover:text-lk-muted-bright transition-colors"
+                    >
+                        Refresh status
+                    </button>
+                </div>
             </div>
         );
     }

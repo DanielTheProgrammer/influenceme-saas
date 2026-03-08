@@ -78,6 +78,7 @@ class InfluencerProfile(InfluencerProfileBase):
     verification_code: Optional[str] = None
     instagram_verification_status: str = "unverified"
     tiktok_verification_status: str = "unverified"
+    is_approved: bool = False
     model_config = ConfigDict(from_attributes=True)
 
 
