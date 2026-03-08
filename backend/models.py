@@ -112,10 +112,13 @@ class EngagementRequest(Base):
     payment_intent_id = Column(String) # From Stripe
     generated_image_preview_url = Column(String) # Watermarked
     generated_image_final_url = Column(String) # Un-watermarked, for influencer
-    proof_url = Column(String, nullable=True)  # URL to fulfillment proof (post/story/screenshot)
+    proof_url = Column(String, nullable=True)            # URL to fulfillment proof (post/story link)
+    proof_screenshot_url = Column(String, nullable=True) # Screenshot URL uploaded by influencer
     rejection_reason = Column(String, nullable=True)
     counter_offer_price = Column(Float, nullable=True)
     counter_offer_description = Column(String, nullable=True)
+    fulfilled_at = Column(DateTime(timezone=True), nullable=True)  # When influencer marked fulfilled
+    dispute_reason = Column(String, nullable=True)                 # Fan's reason if disputed
     
     # Relationships
     fan = relationship("User", back_populates="fan_requests")

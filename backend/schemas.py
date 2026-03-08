@@ -100,6 +100,9 @@ class EngagementRequest(EngagementRequestBase):
     counter_offer_price: Optional[float] = None
     counter_offer_description: Optional[str] = None
     proof_url: Optional[str] = None
+    proof_screenshot_url: Optional[str] = None
+    fulfilled_at: Optional[datetime] = None
+    dispute_reason: Optional[str] = None
     service: Optional[EngagementService] = None
     model_config = ConfigDict(from_attributes=True)
 
@@ -118,5 +121,16 @@ class AcceptCounterOffer(BaseModel):
 
 
 class FulfillRequest(BaseModel):
-    proof_url: str
+    proof_url: Optional[str] = None           # Public post / story URL
+    proof_screenshot_url: Optional[str] = None # Screenshot URL (e.g. hosted on Imgur/Twitter)
     final_image_url: Optional[str] = None
+
+    @field_validator("proof_url")
+    @classmethod
+    def at_least_one_proof(cls, v, info):
+        # Allow None here — cross-field check is done in the endpoint
+        return v
+
+
+class DisputeRequest(BaseModel):
+    reason: str

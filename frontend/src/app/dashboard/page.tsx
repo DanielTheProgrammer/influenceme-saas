@@ -144,11 +144,12 @@ export default function InfluencerDashboard() {
     const [newCounterDescription, setNewCounterDescription] = useState("");
     const [rejectionReason, setRejectionReason] = useState("");
     const [proofUrl, setProofUrl] = useState("");
+    const [proofScreenshotUrl, setProofScreenshotUrl] = useState("");
 
     const handleAction = async (
         id: number,
         action: "approved" | "rejected" | "counter_offered" | "fulfilled",
-        payload?: { price?: number; description?: string; reason?: string; finalUrl?: string; proofUrl?: string }
+        payload?: { price?: number; description?: string; reason?: string; finalUrl?: string; proofUrl?: string; proofScreenshotUrl?: string }
     ) => {
         let endpoint = "";
         let body: any = {};
@@ -167,7 +168,11 @@ export default function InfluencerDashboard() {
                 break;
             case "fulfilled":
                 endpoint = `/influencer/requests/${id}/fulfill`;
-                body = { proof_url: payload?.proofUrl || "", final_image_url: payload?.finalUrl || null };
+                body = {
+                    proof_url: payload?.proofUrl || null,
+                    proof_screenshot_url: payload?.proofScreenshotUrl || null,
+                    final_image_url: payload?.finalUrl || null,
+                };
                 break;
             default:
                 return;
@@ -223,12 +228,16 @@ export default function InfluencerDashboard() {
     const openFulfillModal = (requestId: number) => {
         setCurrentRequestId(requestId);
         setProofUrl("");
+        setProofScreenshotUrl("");
         setShowFulfillModal(true);
     };
 
     const submitFulfill = () => {
-        if (currentRequestId !== null && proofUrl.trim()) {
-            handleAction(currentRequestId, "fulfilled", { proofUrl: proofUrl.trim() });
+        if (currentRequestId !== null && (proofUrl.trim() || proofScreenshotUrl.trim())) {
+            handleAction(currentRequestId, "fulfilled", {
+                proofUrl: proofUrl.trim() || undefined,
+                proofScreenshotUrl: proofScreenshotUrl.trim() || undefined,
+            });
             setShowFulfillModal(false);
             setCurrentRequestId(null);
         }
@@ -572,34 +581,47 @@ export default function InfluencerDashboard() {
             {showFulfillModal && (
                 <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
                     <div className="bg-lk-surface border border-lk-border rounded-2xl max-w-md w-full p-6">
-                        <h2 className="text-2xl font-bold text-lk-white mb-2">Mark as Fulfilled</h2>
-                        <p className="text-lk-muted mb-4 text-sm">
-                            Provide a link to proof of fulfillment (screenshot, post URL, story URL). The fan will review this before releasing payment.
+                        <h2 className="text-2xl font-bold text-lk-white mb-1" style={{ fontFamily: "var(--font-syne)" }}>Submit Proof</h2>
+                        <p className="text-lk-muted mb-5 text-sm">
+                            Provide at least one proof — a link to the post/story, or a screenshot URL. The fan has 48 hours to review before payment auto-releases.
                         </p>
-                        <div className="mb-4">
-                            <label className="block text-xs font-semibold text-lk-muted-bright uppercase tracking-wider mb-1.5">Proof URL *</label>
-                            <input
-                                type="url"
-                                className="w-full bg-lk-black border border-lk-border rounded-xl p-3 text-lk-white focus:border-lk-amber/50 focus:outline-none"
-                                value={proofUrl}
-                                onChange={(e) => setProofUrl(e.target.value)}
-                                placeholder="https://www.instagram.com/p/... or screenshot link"
-                            />
-                            <p className="text-xs text-lk-muted mt-1">Link to the post, story, or screenshot showing you completed the engagement.</p>
+                        <div className="space-y-4 mb-5">
+                            <div>
+                                <label className="block text-xs font-semibold text-lk-muted-bright uppercase tracking-wider mb-1.5">Post / Story URL</label>
+                                <input
+                                    type="url"
+                                    className="w-full bg-lk-black border border-lk-border rounded-xl px-4 py-3 text-lk-white placeholder:text-lk-muted text-sm focus:border-lk-amber outline-none transition-colors"
+                                    value={proofUrl}
+                                    onChange={(e) => setProofUrl(e.target.value)}
+                                    placeholder="https://www.instagram.com/p/..."
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-xs font-semibold text-lk-muted-bright uppercase tracking-wider mb-1.5">Screenshot URL</label>
+                                <input
+                                    type="url"
+                                    className="w-full bg-lk-black border border-lk-border rounded-xl px-4 py-3 text-lk-white placeholder:text-lk-muted text-sm focus:border-lk-amber outline-none transition-colors"
+                                    value={proofScreenshotUrl}
+                                    onChange={(e) => setProofScreenshotUrl(e.target.value)}
+                                    placeholder="https://imgur.com/... or any image link"
+                                />
+                                <p className="text-xs text-lk-muted mt-1">Upload to Imgur, Twitter, or any image host and paste the link.</p>
+                            </div>
                         </div>
                         <div className="flex justify-end gap-3">
                             <button
                                 onClick={() => setShowFulfillModal(false)}
-                                className="px-4 py-2 border border-lk-border text-lk-muted-bright rounded-full font-bold hover:border-lk-border-bright transition-colors"
+                                className="px-4 py-2 border border-lk-border text-lk-muted-bright rounded-full font-bold hover:border-lk-border-bright transition-colors text-sm"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={submitFulfill}
-                                disabled={!proofUrl.trim()}
-                                className="px-4 py-2 bg-violet-600 text-white rounded-lg font-bold hover:bg-violet-700 transition-colors disabled:opacity-50"
+                                disabled={!proofUrl.trim() && !proofScreenshotUrl.trim()}
+                                className="px-5 py-2 bg-lk-amber text-lk-black rounded-full font-bold hover:brightness-110 transition-colors disabled:opacity-50 text-sm"
+                                style={{ fontFamily: "var(--font-syne)" }}
                             >
-                                Submit Proof & Fulfill
+                                Submit & Mark Fulfilled
                             </button>
                         </div>
                     </div>

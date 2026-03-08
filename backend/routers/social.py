@@ -1,12 +1,12 @@
 """
-Public endpoint to fetch social profile preview data (profile picture + follower count)
-from Instagram or TikTok by scraping publicly available OG meta tags.
+Public endpoint to fetch social profile preview data (profile picture, display name,
+followers count) from Instagram or TikTok by scraping publicly available OG meta tags.
 No authentication required — used during influencer onboarding.
 """
 import re
 import requests as http_requests
 from fastapi import APIRouter, HTTPException, Query
-from typing import Optional, List
+from typing import Optional
 
 router = APIRouter(prefix="/social", tags=["social"])
 
@@ -46,56 +46,73 @@ def _extract_og(html: str, property_name: str) -> Optional[str]:
     return m.group(1).strip() if m else None
 
 
+def _scrape_profile(platform: str, handle: str) -> dict:
+    """
+    Scrape all profile data from the public profile page in one HTTP request.
+    Returns a dict with any subset of: profile_picture_url, display_name, bio, followers_count.
+    """
+    url = (
+        f"https://www.instagram.com/{handle}/"
+        if platform == "instagram"
+        else f"https://www.tiktok.com/@{handle}"
+    )
+
+    result: dict = {}
+    try:
+        resp = http_requests.get(url, headers=_HEADERS, timeout=8, allow_redirects=True)
+    except Exception:
+        return result
+
+    if resp.status_code not in (200, 304):
+        return result
+
+    html = resp.text
+
+    # ── Profile picture (og:image) ──────────────────────────
+    image = _extract_og(html, "image")
+    if image and not image.endswith("default.jpg") and "default_profile" not in image:
+        result["profile_picture_url"] = image
+
+    # ── Display name (og:title) ─────────────────────────────
+    # Instagram: "Username (@handle) • Instagram photos and videos"
+    # TikTok:    "Username (@handle) | TikTok"
+    title = _extract_og(html, "title")
+    if title:
+        name = re.sub(r"\s*\(@[^)]+\)\s*", "", title)
+        name = re.sub(r"\s*[•·|]\s*(Instagram|TikTok).*$", "", name, flags=re.IGNORECASE).strip()
+        if name and len(name) < 100:
+            result["display_name"] = name
+
+    # ── Followers ───────────────────────────────────────────
+    description = _extract_og(html, "description") or ""
+
+    if platform == "tiktok":
+        m = re.search(r'"followerCount"\s*:\s*(\d+)', html)
+        if m:
+            result["followers_count"] = int(m.group(1))
+
+    if "followers_count" not in result:
+        m = re.search(r"([\d,]+(?:\.\d+)?[KMkm]?)\s+[Ff]ollowers", description)
+        if not m:
+            m = re.search(r"([\d,]+(?:\.\d+)?[KMkm]?)\s+[Ff]ollowers", html[:10000])
+        if m:
+            result["followers_count"] = _parse_followers(m.group(1))
+
+    # ── Bio (best-effort from og:description) ───────────────
+    # Instagram descriptions look like: "5K Followers, 200 Following, 45 Posts - bio text here"
+    if description:
+        bio_part = re.split(r"\s*-\s*", description, maxsplit=1)
+        if len(bio_part) > 1 and not bio_part[1].startswith("See "):
+            result["bio"] = bio_part[1].strip()
+
+    return result
+
+
 UNAVATAR_BASE = "https://unavatar.io"
 
 
 def _unavatar_url(platform: str, handle: str) -> str:
-    """
-    Returns a URL that resolves to the user's current profile picture.
-    unavatar.io proxies social profile pictures without requiring API auth.
-    """
     return f"{UNAVATAR_BASE}/{platform}/{handle}"
-
-
-def _scrape_followers(platform: str, handle: str) -> Optional[int]:
-    """
-    Attempt to scrape follower count from public profile page.
-    Returns None if blocked or unavailable (caller should fallback to manual entry).
-    """
-    if platform == "instagram":
-        url = f"https://www.instagram.com/{handle}/"
-    else:
-        url = f"https://www.tiktok.com/@{handle}"
-
-    try:
-        resp = http_requests.get(url, headers=_HEADERS, timeout=8, allow_redirects=True)
-    except Exception:
-        return None
-
-    if resp.status_code not in (200, 304):
-        return None
-
-    html = resp.text
-
-    if platform == "instagram":
-        description = _extract_og(html, "description") or ""
-        m = re.search(r"([\d,]+(?:\.\d+)?[KMkm]?)\s+[Ff]ollowers", description)
-        if m:
-            return _parse_followers(m.group(1))
-        m = re.search(r"([\d,]+(?:\.\d+)?[KMkm]?)\s+[Ff]ollowers", html[:10000])
-        if m:
-            return _parse_followers(m.group(1))
-
-    elif platform == "tiktok":
-        m = re.search(r'"followerCount"\s*:\s*(\d+)', html)
-        if m:
-            return int(m.group(1))
-        description = _extract_og(html, "description") or ""
-        m = re.search(r"([\d,]+(?:\.\d+)?[KMkm]?)\s+[Ff]ollowers", description)
-        if m:
-            return _parse_followers(m.group(1))
-
-    return None
 
 
 @router.get("/preview")
@@ -104,12 +121,9 @@ def social_preview(
     handle: str = Query(..., description="Username without @ prefix"),
 ):
     """
-    Return social profile data for a given handle:
-    - profile_picture_url: via unavatar.io (always works for public accounts)
-    - followers_count: scraped from public profile page (may be None if blocked)
-
-    Used during influencer onboarding to auto-fill profile fields.
-    Stored profile_picture_url dynamically resolves to the current profile picture.
+    Return social profile data for a given handle.
+    Tries to scrape real data from the public profile page (og:image, og:title, followers).
+    Falls back to unavatar.io for profile picture if scraping returns nothing.
     """
     handle = handle.strip().lstrip("@")
     if not handle:
@@ -118,15 +132,21 @@ def social_preview(
     if platform not in ("instagram", "tiktok"):
         raise HTTPException(status_code=400, detail="Platform must be 'instagram' or 'tiktok'.")
 
-    profile_picture_url = _unavatar_url(platform, handle)
-    followers_count = _scrape_followers(platform, handle)
+    data = _scrape_profile(platform, handle)
+
+    # Only return profile_picture_url if we actually scraped a real one.
+    # Don't fall back to unavatar.io — it often returns a generic cartoon avatar
+    # and misleads the user into thinking it's their real photo.
+    scraped_pic = data.get("profile_picture_url")
 
     return {
         "platform": platform,
         "handle": handle,
-        "profile_picture_url": profile_picture_url,
-        "followers_count": followers_count,
-        "followers_scraped": followers_count is not None,
+        "profile_picture_url": scraped_pic,        # None if not found
+        "display_name": data.get("display_name"),
+        "bio": data.get("bio"),
+        "followers_count": data.get("followers_count"),
+        "followers_scraped": "followers_count" in data,
+        "pic_scraped": scraped_pic is not None,
+        "scraped": bool(data),
     }
-
-

@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.future import select
 from pydantic import BaseModel
 from typing import List, Optional
+from datetime import datetime, timezone
 import os
 from dotenv import load_dotenv
 
@@ -149,8 +150,14 @@ def fulfill_engagement_request(
     db_request = _get_owned_request(request_id, profile, db)
     if db_request.status != models.RequestStatus.APPROVED:
         raise HTTPException(status_code=400, detail=f"Request is in {db_request.status} state, not APPROVED.")
+
+    if not fulfill_data.proof_url and not fulfill_data.proof_screenshot_url:
+        raise HTTPException(status_code=400, detail="You must provide at least one proof: a post URL or a screenshot URL.")
+
     db_request.status = models.RequestStatus.FULFILLED
     db_request.proof_url = fulfill_data.proof_url
+    db_request.proof_screenshot_url = fulfill_data.proof_screenshot_url
+    db_request.fulfilled_at = datetime.now(timezone.utc)
     if fulfill_data.final_image_url:
         db_request.generated_image_final_url = fulfill_data.final_image_url
     db.commit()

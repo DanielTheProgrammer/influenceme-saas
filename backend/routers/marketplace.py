@@ -4,6 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, selectinload
 from sqlalchemy.future import select
 from typing import List
+from datetime import datetime, timezone, timedelta
+
+DISPUTE_WINDOW_HOURS = 48
 
 router = APIRouter(prefix="/marketplace", tags=["marketplace"])
 
@@ -79,7 +82,21 @@ def get_my_fan_requests(
         .filter(models.EngagementRequest.fan_id == current_user.id)
         .order_by(models.EngagementRequest.created_at.desc())
     )
-    return result.scalars().all()
+    requests = result.scalars().all()
+
+    # Lazy auto-verify: if 48h have passed since fulfilled_at with no dispute, release payment
+    now = datetime.now(timezone.utc)
+    auto_verified = False
+    for req in requests:
+        if req.status == models.RequestStatus.FULFILLED and req.fulfilled_at:
+            fulfilled_at = req.fulfilled_at.replace(tzinfo=timezone.utc) if req.fulfilled_at.tzinfo is None else req.fulfilled_at
+            if now - fulfilled_at >= timedelta(hours=DISPUTE_WINDOW_HOURS):
+                req.status = models.RequestStatus.VERIFIED
+                auto_verified = True
+    if auto_verified:
+        db.commit()
+
+    return requests
 
 
 @router.post("/requests/{request_id}/cancel", response_model=schemas.EngagementRequest)
@@ -149,6 +166,42 @@ def reject_counter_offer(
     if db_request.status != models.RequestStatus.COUNTER_OFFERED:
         raise HTTPException(status_code=400, detail="Request is not in COUNTER_OFFERED state.")
     db_request.status = models.RequestStatus.CANCELLED
+    db.commit()
+    db.refresh(db_request)
+    return db_request
+
+
+@router.post("/requests/{request_id}/dispute", response_model=schemas.EngagementRequest)
+def dispute_fulfillment(
+    request_id: int,
+    dispute_data: schemas.DisputeRequest,
+    db: Session = db_dependency,
+    current_user: models.User = Depends(auth.get_current_active_user)
+):
+    if current_user.role != models.UserRole.FAN:
+        raise HTTPException(status_code=403, detail="Only fans can dispute requests.")
+    db_request = db.execute(
+        select(models.EngagementRequest).filter(
+            models.EngagementRequest.id == request_id,
+            models.EngagementRequest.fan_id == current_user.id
+        )
+    ).scalars().first()
+    if not db_request:
+        raise HTTPException(status_code=404, detail="Request not found.")
+    if db_request.status != models.RequestStatus.FULFILLED:
+        raise HTTPException(status_code=400, detail="Only fulfilled requests can be disputed.")
+
+    # Enforce 48h window
+    if db_request.fulfilled_at:
+        fulfilled_at = db_request.fulfilled_at.replace(tzinfo=timezone.utc) if db_request.fulfilled_at.tzinfo is None else db_request.fulfilled_at
+        if datetime.now(timezone.utc) - fulfilled_at > timedelta(hours=DISPUTE_WINDOW_HOURS):
+            raise HTTPException(
+                status_code=400,
+                detail=f"The {DISPUTE_WINDOW_HOURS}-hour dispute window has passed. Payment has been auto-released."
+            )
+
+    db_request.status = models.RequestStatus.DISPUTED
+    db_request.dispute_reason = dispute_data.reason
     db.commit()
     db.refresh(db_request)
     return db_request

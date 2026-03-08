@@ -40,7 +40,8 @@ export default function InfluencerOnboardingPage() {
     const [displayName,    setDisplayName]    = useState("");
     const [bio,            setBio]            = useState("");
     const [profilePicUrl,  setProfilePicUrl]  = useState("");
-    const [followersCount, setFollowersCount] = useState("");
+    const [followersCount, setFollowersCount] = useState(""); // read-only, fetched only
+    const [followersScraped, setFollowersScraped] = useState(false);
 
     // Services (step 2)
     const [services, setServices] = useState<{ type: string; price: string }[]>([
@@ -72,10 +73,11 @@ export default function InfluencerOnboardingPage() {
             const data = await res.json();
 
             // Pre-fill whatever the API returns
-            if (data.display_name)       setDisplayName(data.display_name);
-            if (data.bio)                setBio(data.bio);
+            if (data.display_name)        setDisplayName(data.display_name);
+            if (data.bio)                 setBio(data.bio);
             if (data.profile_picture_url) setProfilePicUrl(data.profile_picture_url);
-            if (data.followers_count)    setFollowersCount(String(data.followers_count));
+            if (data.followers_count)     setFollowersCount(String(data.followers_count));
+            setFollowersScraped(!!data.followers_count);
 
             setSynced(true);
             return true;
@@ -103,7 +105,7 @@ export default function InfluencerOnboardingPage() {
                     instagram_handle: instagramHandle.trim().replace(/^@/, "") || null,
                     tiktok_handle: tiktokHandle.trim().replace(/^@/, "") || null,
                     profile_picture_url: profilePicUrl || null,
-                    followers_count: followersCount ? parseInt(followersCount) : null,
+                    followers_count: (followersScraped && followersCount) ? parseInt(followersCount) : null,
                 }),
             });
             if (!res.ok) throw new Error("Failed to save profile.");
@@ -284,35 +286,51 @@ export default function InfluencerOnboardingPage() {
                             )}
 
                             <div className="space-y-4">
-                                {/* Profile pic preview */}
-                                {profilePicUrl && (
-                                    <div className="flex items-center gap-4 bg-lk-black border border-lk-border rounded-xl p-3">
-                                        <Image
-                                            src={profilePicUrl}
-                                            alt="Profile"
-                                            width={52}
-                                            height={52}
-                                            className="w-14 h-14 rounded-full object-cover border-2 border-lk-border flex-shrink-0"
-                                            unoptimized
-                                        />
-                                        <div className="flex-1 min-w-0">
-                                            <p className="text-xs text-lk-muted-bright font-semibold mb-1">Profile picture</p>
-                                            <input
-                                                value={profilePicUrl}
-                                                onChange={e => setProfilePicUrl(e.target.value)}
-                                                className="w-full bg-transparent border-b border-lk-border text-lk-muted text-xs outline-none focus:border-lk-amber pb-0.5 transition-colors truncate"
-                                                placeholder="URL"
+                                {/* Profile pic */}
+                                <div>
+                                    <label className={LABEL}>Profile picture</label>
+                                    {profilePicUrl ? (
+                                        <div className="flex items-center gap-4 bg-lk-black border border-lk-border rounded-xl p-3">
+                                            <Image
+                                                src={profilePicUrl}
+                                                alt="Profile"
+                                                width={52}
+                                                height={52}
+                                                className="w-14 h-14 rounded-full object-cover border-2 border-lk-border flex-shrink-0"
+                                                unoptimized
                                             />
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-xs text-lk-cyan font-semibold mb-1 flex items-center gap-1">
+                                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+                                                    Synced — or paste a different URL
+                                                </p>
+                                                <input
+                                                    value={profilePicUrl}
+                                                    onChange={e => setProfilePicUrl(e.target.value)}
+                                                    className="w-full bg-transparent border-b border-lk-border text-lk-muted text-xs outline-none focus:border-lk-amber pb-0.5 transition-colors truncate"
+                                                    placeholder="https://..."
+                                                />
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-
-                                {!profilePicUrl && (
-                                    <div>
-                                        <label className={LABEL}>Profile Picture URL</label>
-                                        <input value={profilePicUrl} onChange={e => setProfilePicUrl(e.target.value)} className={INPUT} placeholder="https://..." />
-                                    </div>
-                                )}
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-3 bg-lk-black border border-dashed border-lk-border rounded-xl p-3">
+                                                <div className="w-14 h-14 rounded-full bg-lk-surface border border-lk-border flex items-center justify-center flex-shrink-0">
+                                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-lk-muted"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-xs text-lk-muted mb-1">Couldn&apos;t auto-fetch — paste a link to your photo</p>
+                                                    <input
+                                                        value={profilePicUrl}
+                                                        onChange={e => setProfilePicUrl(e.target.value)}
+                                                        className="w-full bg-transparent border-b border-lk-border text-lk-white text-xs outline-none focus:border-lk-amber pb-0.5 transition-colors"
+                                                        placeholder="https://..."
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
 
                                 <div>
                                     <label className={LABEL}>Display Name *</label>
@@ -323,8 +341,21 @@ export default function InfluencerOnboardingPage() {
                                     <textarea value={bio} onChange={e => setBio(e.target.value)} rows={3} className={INPUT + " resize-none"} placeholder="Tell fans about yourself..." />
                                 </div>
                                 <div>
-                                    <label className={LABEL}>Followers Count</label>
-                                    <input type="number" min="0" value={followersCount} onChange={e => setFollowersCount(e.target.value)} className={INPUT} placeholder="e.g. 25000" />
+                                    <label className={LABEL}>Followers</label>
+                                    {followersScraped && followersCount ? (
+                                        <div className="flex items-center gap-3 bg-lk-black border border-lk-border rounded-xl px-4 py-3">
+                                            <span className="text-lk-white text-sm font-bold">
+                                                {parseInt(followersCount).toLocaleString()}
+                                            </span>
+                                            <span className="text-xs text-lk-cyan font-semibold bg-lk-cyan/10 border border-lk-cyan/20 rounded-full px-2 py-0.5">
+                                                synced
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <div className="flex items-center gap-3 bg-lk-black border border-lk-border rounded-xl px-4 py-3 opacity-50">
+                                            <span className="text-lk-muted text-sm">Could not fetch — will be verified later</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
