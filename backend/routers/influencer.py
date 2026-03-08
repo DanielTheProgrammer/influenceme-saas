@@ -51,17 +51,12 @@ def _capture_payment_intent(payment_intent_id: str | None):
 
 
 def _payout_influencer(db_request, db):
-    """Transfer the influencer's share to their Stripe Connect account.
+    """Credit the influencer's earnings balance when a deal completes.
 
-    Called right after capturing the PaymentIntent. If the influencer hasn't
-    completed Stripe Connect onboarding, silently skips — admin handles manual payout.
+    Money has already been captured from the fan. We track what we owe the
+    influencer in earnings_balance — admin pays them out manually (PayPal /
+    bank transfer) on a weekly schedule, exactly like OnlyFans/Cameo.
     """
-    stripe_lib = get_stripe()
-    if not stripe_lib:
-        return
-    if not db_request.payment_intent_id or db_request.payment_intent_id.startswith(("pi_mock_", "pi_placeholder_")):
-        return
-
     from sqlalchemy.future import select as sa_select
 
     service = db.execute(
@@ -73,32 +68,15 @@ def _payout_influencer(db_request, db):
     influencer_profile = db.execute(
         sa_select(models.InfluencerProfile).filter(models.InfluencerProfile.id == service.influencer_id)
     ).scalars().first()
-
-    # Only transfer if influencer has completed Stripe Connect onboarding
-    if (
-        not influencer_profile
-        or not influencer_profile.stripe_account_id
-        or not influencer_profile.stripe_onboarding_complete
-    ):
-        return  # Admin will handle manual payout
+    if not influencer_profile:
+        return
 
     platform_fee_pct = float(os.getenv("PLATFORM_FEE_PERCENT", "20")) / 100
-    influencer_amount = int(service.price * 100 * (1 - platform_fee_pct))  # cents
+    influencer_cut = round(service.price * (1 - platform_fee_pct), 2)
 
-    try:
-        stripe_lib.Transfer.create(
-            amount=influencer_amount,
-            currency="usd",
-            destination=influencer_profile.stripe_account_id,
-            transfer_group=f"request_{db_request.id}",
-            metadata={
-                "request_id": db_request.id,
-                "influencer_id": influencer_profile.id,
-                "service_id": service.id,
-            },
-        )
-    except Exception:
-        pass  # Log in production — don't fail the verify response
+    influencer_profile.earnings_balance = round((influencer_profile.earnings_balance or 0) + influencer_cut, 2)
+    influencer_profile.total_earned = round((influencer_profile.total_earned or 0) + influencer_cut, 2)
+    db.commit()
 
 router = APIRouter(
     prefix="/influencer",
@@ -286,6 +264,38 @@ def get_analytics(
         "verified_count": len(verified),
         "rejected_count": by_status.get("rejected", 0),
     }
+
+
+# ─── Earnings & Payouts ────────────────────────────────────────────────────
+
+class PayoutInfoUpdate(BaseModel):
+    payout_info: str  # PayPal email, bank details, etc.
+
+
+@router.get("/earnings")
+def get_earnings(
+    current_user: models.User = Depends(auth.get_current_active_user),
+    db: Session = db_dependency
+):
+    profile = _get_influencer_profile(current_user, db)
+    return {
+        "earnings_balance": round(profile.earnings_balance or 0, 2),
+        "total_earned": round(profile.total_earned or 0, 2),
+        "payout_info": profile.payout_info,
+        "platform_fee_percent": int(float(os.getenv("PLATFORM_FEE_PERCENT", "20"))),
+    }
+
+
+@router.post("/earnings/payout-info")
+def update_payout_info(
+    body: PayoutInfoUpdate,
+    current_user: models.User = Depends(auth.get_current_active_user),
+    db: Session = db_dependency
+):
+    profile = _get_influencer_profile(current_user, db)
+    profile.payout_info = body.payout_info
+    db.commit()
+    return {"status": "saved"}
 
 
 # ─── Social Verification ───────────────────────────────────────────────────

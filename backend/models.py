@@ -63,6 +63,11 @@ class InfluencerProfile(Base):
     # Admin approval — new registrations start unapproved until admin reviews
     is_approved = Column(Boolean, default=False, nullable=False)
 
+    # Earnings & payouts
+    earnings_balance = Column(Float, default=0.0, nullable=False)  # Accumulated, pending payout
+    total_earned = Column(Float, default=0.0, nullable=False)       # Lifetime total (for display)
+    payout_info = Column(String, nullable=True)                     # PayPal email / bank instructions
+
     # Relationships
     user = relationship("User", back_populates="influencer_profile")
     services = relationship("EngagementService", back_populates="influencer")

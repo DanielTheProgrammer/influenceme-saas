@@ -79,6 +79,9 @@ class InfluencerProfile(InfluencerProfileBase):
     instagram_verification_status: str = "unverified"
     tiktok_verification_status: str = "unverified"
     is_approved: bool = False
+    earnings_balance: float = 0.0
+    total_earned: float = 0.0
+    payout_info: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
 
 

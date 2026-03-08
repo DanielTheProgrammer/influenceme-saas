@@ -42,6 +42,8 @@ interface InfluencerProfile {
     instagram_verification_status: string;
     tiktok_verification_status: string;
     is_approved: boolean;
+    earnings_balance: number;
+    total_earned: number;
 }
 
 export default function InfluencerDashboard() {
@@ -483,7 +485,23 @@ export default function InfluencerDashboard() {
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-8 pt-24">
-            <h1 className="text-3xl font-bold mb-8 text-lk-white">Creator Dashboard</h1>
+            <div className="flex items-start justify-between mb-8">
+                <h1 className="text-3xl font-bold text-lk-white">Creator Dashboard</h1>
+                <Link
+                    href="/influencer/billing"
+                    className="flex items-center gap-3 bg-lk-surface border border-lk-border hover:border-lk-amber/40 rounded-2xl px-5 py-3 transition-all group"
+                >
+                    <div className="text-right">
+                        <p className="text-[10px] font-semibold text-lk-muted uppercase tracking-widest">Pending Payout</p>
+                        <p className="text-xl font-black text-lk-amber group-hover:brightness-110 transition-all" style={{ fontFamily: "var(--font-syne)" }}>
+                            ${(profile?.earnings_balance ?? 0).toFixed(2)}
+                        </p>
+                    </div>
+                    <svg className="w-4 h-4 text-lk-muted group-hover:text-lk-amber transition-colors" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <path d="M9 18l6-6-6-6"/>
+                    </svg>
+                </Link>
+            </div>
 
             {/* Social Verification Panels */}
             {profile && (profile.instagram_handle || profile.tiktok_handle) && (

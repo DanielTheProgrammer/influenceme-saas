@@ -52,6 +52,9 @@ def on_startup():
         "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS recent_post_urls TEXT",
         "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS viral_video_url VARCHAR",
         "ALTER TABLE engagement_requests ADD COLUMN IF NOT EXISTS proof_url VARCHAR",
+        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS earnings_balance FLOAT DEFAULT 0",
+        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS total_earned FLOAT DEFAULT 0",
+        "ALTER TABLE influencer_profiles ADD COLUMN IF NOT EXISTS payout_info VARCHAR",
     ]
 
     # One-time cleanup: remove placeholder demo video URLs that were previously seeded
