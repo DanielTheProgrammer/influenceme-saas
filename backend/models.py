@@ -60,6 +60,9 @@ class InfluencerProfile(Base):
     instagram_verification_status = Column(String, default="unverified")  # unverified | pending | verified
     tiktok_verification_status = Column(String, default="unverified")
 
+    # Admin approval — new registrations start unapproved until admin reviews
+    is_approved = Column(Boolean, default=False, nullable=False)
+
     # Relationships
     user = relationship("User", back_populates="influencer_profile")
     services = relationship("EngagementService", back_populates="influencer")

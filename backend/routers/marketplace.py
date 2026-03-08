@@ -19,7 +19,7 @@ def get_all_influencers(limit: int = 50, db: Session = db_dependency):
         select(models.InfluencerProfile)
         .options(selectinload(models.InfluencerProfile.services))
         .join(models.User)
-        .filter(models.User.is_active == True)
+        .filter(models.User.is_active == True, models.InfluencerProfile.is_approved == True)
         .limit(limit)
     )
     return result.scalars().all()
