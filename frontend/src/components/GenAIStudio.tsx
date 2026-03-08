@@ -39,9 +39,25 @@ function CheckoutForm({
 
     const handlePay = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!stripe || !elements) return;
         setPaying(true);
         setError(null);
+
+        // Mock mode: simulate success without calling Stripe
+        if (isMock) {
+            setTimeout(() => { setPaying(false); onSuccess(); }, 800);
+            return;
+        }
+
+        if (!stripe || !elements) { setPaying(false); return; }
+
+        // Validate the Payment Element before confirming
+        const { error: submitError } = await elements.submit();
+        if (submitError) {
+            setError(submitError.message ?? "Please complete your payment details.");
+            setPaying(false);
+            return;
+        }
+
         const { error: stripeError } = await stripe.confirmPayment({
             elements,
             confirmParams: { return_url: `${window.location.origin}/fan/requests` },
@@ -286,7 +302,7 @@ export default function GenAIStudio({
                             <CheckoutForm
                                 clientSecret={clientSecret}
                                 requestId={requestId!}
-                                onSuccess={() => { setStep("done"); onSubmitRequest(previewUrl!); }}
+                                onSuccess={() => setStep("done")}
                                 onBack={() => setStep("preview")}
                             />
                         </Elements>
