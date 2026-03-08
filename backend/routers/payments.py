@@ -67,6 +67,7 @@ def create_payment_intent(
             intent = stripe.PaymentIntent.create(
                 amount=total_amount,
                 currency="usd",
+                capture_method="manual",  # authorize only — capture on deal completion
                 metadata={"request_id": db_request.id, "fan_id": current_user.id, "platform_fee": platform_fee}
             )
             db_request.payment_intent_id = intent.id

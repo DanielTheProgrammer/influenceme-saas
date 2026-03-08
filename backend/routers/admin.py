@@ -1,4 +1,5 @@
 import models, schemas, database, auth
+from routers.influencer import _cancel_payment_intent, _capture_payment_intent
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session, selectinload
@@ -268,6 +269,11 @@ def resolve_dispute(
 
     req.status = models.RequestStatus.VERIFIED if body.action == "approve_payout" else models.RequestStatus.CANCELLED
     db.commit()
+    # Stripe: capture payment for influencer (approve) or cancel hold (refund fan)
+    if body.action == "approve_payout":
+        _capture_payment_intent(req.payment_intent_id)
+    else:
+        _cancel_payment_intent(req.payment_intent_id)
     return {"status": body.action, "request_id": request_id}
 
 

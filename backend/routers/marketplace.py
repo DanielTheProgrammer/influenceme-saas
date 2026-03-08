@@ -1,4 +1,5 @@
 import models, schemas, database, auth
+from routers.influencer import _cancel_payment_intent, _capture_payment_intent
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session, selectinload
@@ -86,15 +87,17 @@ def get_my_fan_requests(
 
     # Lazy auto-verify: if 48h have passed since fulfilled_at with no dispute, release payment
     now = datetime.now(timezone.utc)
-    auto_verified = False
+    auto_verified_ids = []
     for req in requests:
         if req.status == models.RequestStatus.FULFILLED and req.fulfilled_at:
             fulfilled_at = req.fulfilled_at.replace(tzinfo=timezone.utc) if req.fulfilled_at.tzinfo is None else req.fulfilled_at
             if now - fulfilled_at >= timedelta(hours=DISPUTE_WINDOW_HOURS):
                 req.status = models.RequestStatus.VERIFIED
-                auto_verified = True
-    if auto_verified:
+                auto_verified_ids.append(req.payment_intent_id)
+    if auto_verified_ids:
         db.commit()
+        for pi_id in auto_verified_ids:
+            _capture_payment_intent(pi_id)
 
     return requests
 
@@ -120,6 +123,8 @@ def cancel_request(
     db_request.status = models.RequestStatus.CANCELLED
     db.commit()
     db.refresh(db_request)
+    # Release card hold — fan initiated cancel
+    _cancel_payment_intent(db_request.payment_intent_id)
     return db_request
 
 
@@ -168,6 +173,8 @@ def reject_counter_offer(
     db_request.status = models.RequestStatus.CANCELLED
     db.commit()
     db.refresh(db_request)
+    # Release card hold — fan rejected counter-offer
+    _cancel_payment_intent(db_request.payment_intent_id)
     return db_request
 
 
@@ -228,4 +235,6 @@ def verify_fulfillment(
     db_request.status = models.RequestStatus.VERIFIED
     db.commit()
     db.refresh(db_request)
+    # Collect payment from fan — deal confirmed complete
+    _capture_payment_intent(db_request.payment_intent_id)
     return db_request

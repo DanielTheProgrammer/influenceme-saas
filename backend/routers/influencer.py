@@ -23,6 +23,32 @@ def get_stripe():
         return stripe
     return None
 
+
+def _cancel_payment_intent(payment_intent_id: str | None):
+    """Cancel a manual-capture PaymentIntent, releasing the card hold."""
+    if not payment_intent_id or payment_intent_id.startswith("pi_mock_") or payment_intent_id.startswith("pi_placeholder_"):
+        return
+    stripe = get_stripe()
+    if not stripe:
+        return
+    try:
+        stripe.PaymentIntent.cancel(payment_intent_id)
+    except Exception:
+        pass  # already cancelled or no such intent — safe to ignore
+
+
+def _capture_payment_intent(payment_intent_id: str | None):
+    """Capture a manual-capture PaymentIntent, collecting payment from the fan."""
+    if not payment_intent_id or payment_intent_id.startswith("pi_mock_") or payment_intent_id.startswith("pi_placeholder_"):
+        return
+    stripe = get_stripe()
+    if not stripe:
+        return
+    try:
+        stripe.PaymentIntent.capture(payment_intent_id)
+    except Exception:
+        pass  # already captured or cancelled — safe to ignore
+
 router = APIRouter(
     prefix="/influencer",
     tags=["influencer"],
@@ -113,6 +139,8 @@ def reject_engagement_request(
     db_request.rejection_reason = reject_data.rejection_reason
     db.commit()
     db.refresh(db_request)
+    # Release the card hold — fan is not charged
+    _cancel_payment_intent(db_request.payment_intent_id)
     return db_request
 
 
