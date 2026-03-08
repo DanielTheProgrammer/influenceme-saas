@@ -49,6 +49,57 @@ def _capture_payment_intent(payment_intent_id: str | None):
     except Exception:
         pass  # already captured or cancelled — safe to ignore
 
+
+def _payout_influencer(db_request, db):
+    """Transfer the influencer's share to their Stripe Connect account.
+
+    Called right after capturing the PaymentIntent. If the influencer hasn't
+    completed Stripe Connect onboarding, silently skips — admin handles manual payout.
+    """
+    stripe_lib = get_stripe()
+    if not stripe_lib:
+        return
+    if not db_request.payment_intent_id or db_request.payment_intent_id.startswith(("pi_mock_", "pi_placeholder_")):
+        return
+
+    from sqlalchemy.future import select as sa_select
+
+    service = db.execute(
+        sa_select(models.EngagementService).filter(models.EngagementService.id == db_request.service_id)
+    ).scalars().first()
+    if not service:
+        return
+
+    influencer_profile = db.execute(
+        sa_select(models.InfluencerProfile).filter(models.InfluencerProfile.id == service.influencer_id)
+    ).scalars().first()
+
+    # Only transfer if influencer has completed Stripe Connect onboarding
+    if (
+        not influencer_profile
+        or not influencer_profile.stripe_account_id
+        or not influencer_profile.stripe_onboarding_complete
+    ):
+        return  # Admin will handle manual payout
+
+    platform_fee_pct = float(os.getenv("PLATFORM_FEE_PERCENT", "20")) / 100
+    influencer_amount = int(service.price * 100 * (1 - platform_fee_pct))  # cents
+
+    try:
+        stripe_lib.Transfer.create(
+            amount=influencer_amount,
+            currency="usd",
+            destination=influencer_profile.stripe_account_id,
+            transfer_group=f"request_{db_request.id}",
+            metadata={
+                "request_id": db_request.id,
+                "influencer_id": influencer_profile.id,
+                "service_id": service.id,
+            },
+        )
+    except Exception:
+        pass  # Log in production — don't fail the verify response
+
 router = APIRouter(
     prefix="/influencer",
     tags=["influencer"],
