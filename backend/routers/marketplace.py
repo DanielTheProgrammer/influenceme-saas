@@ -1,4 +1,4 @@
-import models, schemas, database, auth
+import models, schemas, database, auth, email_service, os
 from routers.influencer import _cancel_payment_intent, _capture_payment_intent, _payout_influencer
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -67,6 +67,22 @@ def submit_engagement_request(
     db.add(db_request)
     db.commit()
     db.refresh(db_request)
+    # Notify influencer of new request
+    influencer_user = db.execute(
+        select(models.User)
+        .join(models.InfluencerProfile)
+        .join(models.EngagementService, models.EngagementService.influencer_id == models.InfluencerProfile.id)
+        .filter(models.EngagementService.id == request_data.service_id)
+    ).scalars().first()
+    if influencer_user:
+        inf_profile = influencer_user.influencer_profile
+        email_service.notify_influencer_new_request(
+            influencer_user.email,
+            inf_profile.display_name or influencer_user.email,
+            current_user.id,
+            service.engagement_type.value,
+            service.price,
+        )
     return db_request
 
 
@@ -212,6 +228,20 @@ def dispute_fulfillment(
     db_request.dispute_reason = dispute_data.reason
     db.commit()
     db.refresh(db_request)
+    # Notify admin and influencer
+    admin_email = os.getenv("ADMIN_EMAIL", "")
+    if admin_email:
+        email_service.notify_admin_dispute(admin_email, db_request.id, dispute_data.reason)
+    # Notify the influencer
+    influencer_user = db.execute(
+        select(models.User)
+        .join(models.InfluencerProfile)
+        .join(models.EngagementService)
+        .filter(models.EngagementService.id == db_request.service_id)
+    ).scalars().first()
+    if influencer_user:
+        profile = influencer_user.influencer_profile
+        email_service.notify_influencer_dispute(influencer_user.email, profile.display_name or influencer_user.email, db_request.id)
     return db_request
 
 

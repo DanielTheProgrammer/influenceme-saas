@@ -1,4 +1,4 @@
-import models, schemas, database, auth
+import models, schemas, database, auth, email_service
 from routers.influencer import _cancel_payment_intent, _capture_payment_intent, _payout_influencer
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -192,6 +192,9 @@ def approve_registration(
         raise HTTPException(status_code=404, detail="Profile not found.")
     profile.is_approved = True
     db.commit()
+    influencer_user = db.execute(select(models.User).filter(models.User.id == profile.user_id)).scalars().first()
+    if influencer_user:
+        email_service.notify_influencer_approved(influencer_user.email, profile.display_name or influencer_user.email)
     return {"status": "approved", "profile_id": profile_id}
 
 

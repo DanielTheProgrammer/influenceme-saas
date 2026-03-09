@@ -1,4 +1,5 @@
 import models, schemas, database, auth
+import email_service
 from limiter import limiter
 
 from fastapi import APIRouter, Depends, HTTPException, Request, status
@@ -77,6 +78,11 @@ def _payout_influencer(db_request, db):
     influencer_profile.earnings_balance = round((influencer_profile.earnings_balance or 0) + influencer_cut, 2)
     influencer_profile.total_earned = round((influencer_profile.total_earned or 0) + influencer_cut, 2)
     db.commit()
+    influencer_user = db.execute(
+        sa_select(models.User).filter(models.User.id == influencer_profile.user_id)
+    ).scalars().first()
+    if influencer_user:
+        email_service.notify_influencer_payment_released(influencer_user.email, influencer_profile.display_name or influencer_user.email, influencer_cut)
 
 router = APIRouter(
     prefix="/influencer",
@@ -148,6 +154,9 @@ def approve_engagement_request(
     db_request.status = models.RequestStatus.APPROVED
     db.commit()
     db.refresh(db_request)
+    fan = db.execute(select(models.User).filter(models.User.id == db_request.fan_id)).scalars().first()
+    if fan:
+        email_service.notify_fan_request_approved(fan.email, profile.display_name or current_user.email)
     return db_request
 
 
@@ -168,8 +177,10 @@ def reject_engagement_request(
     db_request.rejection_reason = reject_data.rejection_reason
     db.commit()
     db.refresh(db_request)
-    # Release the card hold — fan is not charged
     _cancel_payment_intent(db_request.payment_intent_id)
+    fan = db.execute(select(models.User).filter(models.User.id == db_request.fan_id)).scalars().first()
+    if fan:
+        email_service.notify_fan_request_rejected(fan.email, profile.display_name or current_user.email, reject_data.rejection_reason)
     return db_request
 
 
@@ -191,6 +202,9 @@ def counter_offer_engagement_request(
     db_request.counter_offer_description = counter_offer_data.new_description
     db.commit()
     db.refresh(db_request)
+    fan = db.execute(select(models.User).filter(models.User.id == db_request.fan_id)).scalars().first()
+    if fan:
+        email_service.notify_fan_counter_offer(fan.email, profile.display_name or current_user.email, counter_offer_data.new_price, counter_offer_data.new_description)
     return db_request
 
 
@@ -219,6 +233,9 @@ def fulfill_engagement_request(
         db_request.generated_image_final_url = fulfill_data.final_image_url
     db.commit()
     db.refresh(db_request)
+    fan = db.execute(select(models.User).filter(models.User.id == db_request.fan_id)).scalars().first()
+    if fan:
+        email_service.notify_fan_request_fulfilled(fan.email, profile.display_name or current_user.email, fulfill_data.proof_url)
     return db_request
 
 
