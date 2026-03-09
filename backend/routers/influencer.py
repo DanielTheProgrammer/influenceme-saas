@@ -78,6 +78,26 @@ def _payout_influencer(db_request, db):
     influencer_profile.earnings_balance = round((influencer_profile.earnings_balance or 0) + influencer_cut, 2)
     influencer_profile.total_earned = round((influencer_profile.total_earned or 0) + influencer_cut, 2)
     db.commit()
+
+    # Auto-transfer via Stripe Connect Custom if bank is connected
+    if influencer_profile.stripe_account_id and influencer_profile.stripe_onboarding_complete:
+        stripe_lib = get_stripe()
+        if stripe_lib:
+            try:
+                stripe_lib.Transfer.create(
+                    amount=int(influencer_cut * 100),  # cents
+                    currency="eur",
+                    destination=influencer_profile.stripe_account_id,
+                    transfer_group=f"request_{db_request.id}",
+                    metadata={"request_id": db_request.id, "influencer_id": influencer_profile.id},
+                )
+                # Clear balance since we transferred directly
+                influencer_profile.earnings_balance = round((influencer_profile.earnings_balance or 0) - influencer_cut, 2)
+                db.commit()
+            except Exception as e:
+                print(f"[payout] Stripe transfer failed for influencer {influencer_profile.id}: {e}")
+                # Keep balance credited — admin will handle manually
+
     influencer_user = db.execute(
         sa_select(models.User).filter(models.User.id == influencer_profile.user_id)
     ).scalars().first()
@@ -340,6 +360,101 @@ def request_verification(
         raise HTTPException(status_code=400, detail="Platform must be 'instagram' or 'tiktok'.")
     db.commit()
     return {"status": "pending", "platform": body.platform}
+
+
+# ─── Stripe Connect Custom (bank payouts) ─────────────────────────────────
+
+class BankConnectRequest(BaseModel):
+    first_name: str
+    last_name: str
+    dob_day: int
+    dob_month: int
+    dob_year: int
+    address_line1: str
+    city: str
+    postal_code: str
+    country: str          # ISO 3166-1 alpha-2 e.g. "FR", "US", "GB"
+    iban: str             # Full IBAN / account number
+    account_holder_name: str
+    currency: str = "eur" # eur for EU, usd for US, gbp for GB
+
+
+@router.post("/stripe/connect-bank")
+def connect_bank(
+    request: Request,
+    body: BankConnectRequest,
+    current_user: models.User = Depends(auth.get_current_active_user),
+    db: Session = db_dependency
+):
+    profile = _get_influencer_profile(current_user, db)
+    stripe_lib = get_stripe()
+
+    if not stripe_lib:
+        # Dev mode — just store IBAN for manual payout
+        profile.payout_info = f"{body.account_holder_name} | {body.iban} | {body.currency.upper()}"
+        profile.stripe_onboarding_complete = True
+        db.commit()
+        return {"status": "saved_dev_mode", "message": "Bank saved (Stripe not configured — manual payout)."}
+
+    import time
+    client_ip = request.client.host if request.client else "0.0.0.0"
+
+    try:
+        if not profile.stripe_account_id:
+            account = stripe_lib.Account.create(
+                type="custom",
+                country=body.country,
+                email=current_user.email,
+                capabilities={"transfers": {"requested": True}},
+                business_type="individual",
+                individual={
+                    "first_name": body.first_name,
+                    "last_name": body.last_name,
+                    "dob": {"day": body.dob_day, "month": body.dob_month, "year": body.dob_year},
+                    "address": {
+                        "line1": body.address_line1,
+                        "city": body.city,
+                        "postal_code": body.postal_code,
+                        "country": body.country,
+                    },
+                    "email": current_user.email,
+                },
+                tos_acceptance={"date": int(time.time()), "ip": client_ip, "service_agreement": "recipient"},
+            )
+            profile.stripe_account_id = account.id
+
+        # Add / replace bank account
+        stripe_lib.Account.create_external_account(
+            profile.stripe_account_id,
+            external_account={
+                "object": "bank_account",
+                "country": body.country,
+                "currency": body.currency,
+                "account_holder_name": body.account_holder_name,
+                "account_holder_type": "individual",
+                "account_number": body.iban,
+            },
+        )
+        profile.stripe_onboarding_complete = True
+        profile.payout_info = f"{body.account_holder_name} | {body.iban[:8]}••• | {body.currency.upper()}"
+        db.commit()
+        return {"status": "connected", "account_id": profile.stripe_account_id}
+
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Could not connect bank: {str(e)}")
+
+
+@router.get("/stripe/bank-status")
+def get_bank_status(
+    current_user: models.User = Depends(auth.get_current_active_user),
+    db: Session = db_dependency
+):
+    profile = _get_influencer_profile(current_user, db)
+    return {
+        "connected": profile.stripe_onboarding_complete or False,
+        "payout_info": profile.payout_info,
+        "account_id": profile.stripe_account_id,
+    }
 
 
 # ─── Billing / Stripe Connect ──────────────────────────────────────────────
