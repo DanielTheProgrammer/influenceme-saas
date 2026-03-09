@@ -16,6 +16,8 @@ interface Influencer {
     profile_picture_url: string | null;
     instagram_handle?: string | null;
     tiktok_handle?: string | null;
+    instagram_verification_status?: string;
+    tiktok_verification_status?: string;
     followers_count?: number | null;
     viral_video_url?: string | null;
     services: Service[];
@@ -36,12 +38,22 @@ function formatFollowers(n: number): string {
     return String(n);
 }
 
+const VerifiedBadge = () => (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-lk-cyan/15 text-lk-cyan border border-lk-cyan/30">
+        <svg className="w-2.5 h-2.5" viewBox="0 0 24 24" fill="currentColor"><path d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
+        Verified
+    </span>
+);
+
 export default function InfluencerCard({ influencer }: { influencer: Influencer }) {
     const [videoFailed, setVideoFailed] = useState(false);
     const prices = influencer.services.map((s) => s.price);
     const minPrice = prices.length ? Math.min(...prices) : null;
     const handle = influencer.instagram_handle || influencer.tiktok_handle;
     const hasVideo = !!influencer.viral_video_url && !videoFailed;
+    const isVerified =
+        influencer.instagram_verification_status === "verified" ||
+        influencer.tiktok_verification_status === "verified";
 
     if (hasVideo) {
         return (
@@ -95,6 +107,7 @@ export default function InfluencerCard({ influencer }: { influencer: Influencer 
                                 @{handle}
                             </span>
                         )}
+                        {isVerified && <VerifiedBadge />}
                     </div>
 
                     {/* Bottom overlay — name, price */}
@@ -167,12 +180,15 @@ export default function InfluencerCard({ influencer }: { influencer: Influencer 
                             )}
                         </div>
                         <div className="min-w-0 flex-1">
-                            <h2
-                                className="text-base font-bold text-lk-white truncate leading-tight group-hover:text-lk-amber transition-colors"
-                                style={{ fontFamily: "var(--font-syne)" }}
-                            >
-                                {influencer.display_name}
-                            </h2>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                                <h2
+                                    className="text-base font-bold text-lk-white truncate leading-tight group-hover:text-lk-amber transition-colors"
+                                    style={{ fontFamily: "var(--font-syne)" }}
+                                >
+                                    {influencer.display_name}
+                                </h2>
+                                {isVerified && <VerifiedBadge />}
+                            </div>
                             {handle && (
                                 <p className="text-lk-muted text-xs truncate mt-0.5">@{handle}</p>
                             )}

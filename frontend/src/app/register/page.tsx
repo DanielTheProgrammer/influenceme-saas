@@ -25,11 +25,13 @@ export default function RegisterPage() {
     const router = useRouter();
 
     // ── Registration state ─────────────────────────────────────
-    const [email,    setEmail]    = useState("");
-    const [password, setPassword] = useState("");
-    const [role,     setRole]     = useState<"fan" | "influencer">("fan");
-    const [loading,  setLoading]  = useState(false);
-    const [error,    setError]    = useState<string | null>(null);
+    const [email,           setEmail]           = useState("");
+    const [password,        setPassword]        = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [agreedToTos,     setAgreedToTos]     = useState(false);
+    const [role,            setRole]            = useState<"fan" | "influencer">("fan");
+    const [loading,         setLoading]         = useState(false);
+    const [error,           setError]           = useState<string | null>(null);
 
     // ── Verification state ─────────────────────────────────────
     const [step,       setStep]       = useState<"register" | "verify">("register");
@@ -68,6 +70,8 @@ export default function RegisterPage() {
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         if (password.length < 8) { setError("Password must be at least 8 characters."); return; }
+        if (password !== confirmPassword) { setError("Passwords don't match."); return; }
+        if (!agreedToTos) { setError("Please accept the Terms of Service to continue."); return; }
         setLoading(true);
         setError(null);
         try {
@@ -192,6 +196,26 @@ export default function RegisterPage() {
                                 )}
                             </div>
                             <div>
+                                <label htmlFor="confirm" className="block text-xs font-semibold text-lk-muted-bright uppercase tracking-wider mb-1.5">
+                                    Confirm Password
+                                </label>
+                                <input
+                                    id="confirm" type="password" required minLength={8}
+                                    value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)}
+                                    className={`w-full bg-lk-black border rounded-xl p-3 text-lk-white placeholder-lk-muted focus:outline-none transition-colors text-sm ${
+                                        confirmPassword && confirmPassword !== password
+                                            ? "border-rose-500/60 focus:border-rose-500"
+                                            : confirmPassword && confirmPassword === password
+                                            ? "border-lk-cyan/50 focus:border-lk-cyan/70"
+                                            : "border-lk-border focus:border-lk-amber/50"
+                                    }`}
+                                    placeholder="Repeat your password"
+                                />
+                                {confirmPassword && confirmPassword !== password && (
+                                    <p className="text-xs text-rose-400 mt-1">Passwords don&apos;t match</p>
+                                )}
+                            </div>
+                            <div>
                                 <label className="block text-xs font-semibold text-lk-muted-bright uppercase tracking-wider mb-2">
                                     I am a...
                                 </label>
@@ -210,8 +234,32 @@ export default function RegisterPage() {
                                     ))}
                                 </div>
                             </div>
+                            <label className="flex items-start gap-3 cursor-pointer group">
+                                <div className="relative mt-0.5 flex-shrink-0">
+                                    <input
+                                        type="checkbox"
+                                        checked={agreedToTos}
+                                        onChange={e => setAgreedToTos(e.target.checked)}
+                                        className="sr-only"
+                                    />
+                                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${
+                                        agreedToTos ? "bg-lk-amber border-lk-amber" : "border-lk-border group-hover:border-lk-border-bright bg-lk-black"
+                                    }`}>
+                                        {agreedToTos && (
+                                            <svg className="w-3 h-3 text-lk-black" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.5" strokeLinecap="round"><path d="M5 13l4 4L19 7"/></svg>
+                                        )}
+                                    </div>
+                                </div>
+                                <p className="text-xs text-lk-muted leading-relaxed">
+                                    I agree to the{" "}
+                                    <a href="/terms" target="_blank" className="text-lk-amber hover:brightness-110 font-semibold">Terms of Service</a>
+                                    {" "}and{" "}
+                                    <a href="/privacy" target="_blank" className="text-lk-amber hover:brightness-110 font-semibold">Privacy Policy</a>
+                                    , including the 48-hour dispute window policy for completed deals.
+                                </p>
+                            </label>
                             <button
-                                type="submit" disabled={loading}
+                                type="submit" disabled={loading || !agreedToTos || (!!confirmPassword && confirmPassword !== password)}
                                 className="w-full py-3 bg-lk-amber text-lk-black font-bold rounded-full hover:brightness-110 transition-all disabled:opacity-50 tracking-wide"
                                 style={{ fontFamily: "var(--font-syne)" }}
                             >
